@@ -1,0 +1,19 @@
+# Project Rules
+
+## Architecture
+
+- This is a **frontend-only service** built with Next.js
+- All API calls must be made to external backend services
+- Do not implement backend logic, database connections, or server-side business logic in this codebase
+- This service acts as a client that communicates with separate backend/API services
+
+## Application Context
+
+- This is a **fintech application**
+
+## API Integration
+
+- All API endpoints should be configured to point to external services
+- Use environment variables for API base URLs and endpoints
+- Implement proper error handling for API failures
+- Consider rate limiting, retry logic, and timeout handling for external API calls
