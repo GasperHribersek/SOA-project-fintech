@@ -1,10 +1,50 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flasgger import Swagger
 from datetime import datetime
 from models import db
 import os
 
 app = Flask(__name__)
+
+# Swagger configuration
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "apispec",
+            "route": "/apispec.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/api-docs"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Analytics Server API",
+        "description": "API for tracking and managing analytics events",
+        "version": "1.0.0"
+    },
+    "basePath": "/",
+    "schemes": ["http", "https"],
+    "tags": [
+        {
+            "name": "Health",
+            "description": "Health check endpoints"
+        },
+        {
+            "name": "Analytics Events",
+            "description": "Endpoints for managing analytics events"
+        }
+    ]
+}
+
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://analytics_user:analytics_pass@db:5432/analytics_db')
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
@@ -21,12 +61,93 @@ CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint
+    ---
+    tags:
+      - Health
+    responses:
+      200:
+        description: Service health status
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: healthy
+            timestamp:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00"
+    """
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
 
 @app.route('/api/analytics/event', methods=['POST'])
 def track_event():
-    """Track an analytics event"""
+    """Track an analytics event
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - event_type
+          properties:
+            event_type:
+              type: string
+              description: Type of the event
+              example: page_view
+            user_id:
+              type: integer
+              description: ID of the user
+              example: 123
+            session_id:
+              type: string
+              description: Session identifier
+              example: "abc123def456"
+            page_path:
+              type: string
+              description: Path of the page
+              example: "/dashboard"
+            metadata:
+              type: object
+              description: Additional event metadata
+              example: {"key": "value"}
+    responses:
+      201:
+        description: Event tracked successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            event_id:
+              type: integer
+              example: 1
+            timestamp:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00"
+      400:
+        description: Bad request - missing required fields
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "event_type is required"
+      500:
+        description: Internal server error
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     try:
         data = request.get_json()
         
@@ -60,7 +181,69 @@ def track_event():
 
 @app.route('/api/analytics/events', methods=['POST'])
 def track_events_batch():
-    """Track multiple analytics events in a batch"""
+    """Track multiple analytics events in a batch
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - events
+          properties:
+            events:
+              type: array
+              items:
+                type: object
+                required:
+                  - event_type
+                properties:
+                  event_type:
+                    type: string
+                    example: page_view
+                  user_id:
+                    type: integer
+                    example: 123
+                  session_id:
+                    type: string
+                    example: "abc123def456"
+                  page_path:
+                    type: string
+                    example: "/dashboard"
+                  metadata:
+                    type: object
+                    example: {"key": "value"}
+    responses:
+      201:
+        description: Events tracked successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            count:
+              type: integer
+              example: 2
+            event_ids:
+              type: array
+              items:
+                type: integer
+              example: [1, 2]
+      400:
+        description: Bad request - missing events array
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "events array is required"
+      500:
+        description: Internal server error
+    """
     try:
         data = request.get_json()
         
@@ -98,7 +281,87 @@ def track_events_batch():
 
 @app.route('/api/analytics/events', methods=['GET'])
 def get_events():
-    """Get analytics events with optional filters"""
+    """Get analytics events with optional filters
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: query
+        name: user_id
+        type: integer
+        description: Filter by user ID
+        required: false
+      - in: query
+        name: event_type
+        type: string
+        description: Filter by event type
+        required: false
+      - in: query
+        name: start_date
+        type: string
+        format: date-time
+        description: Filter events from this date (ISO format)
+        required: false
+      - in: query
+        name: end_date
+        type: string
+        format: date-time
+        description: Filter events until this date (ISO format)
+        required: false
+      - in: query
+        name: limit
+        type: integer
+        description: Maximum number of events to return
+        default: 100
+        required: false
+      - in: query
+        name: offset
+        type: integer
+        description: Number of events to skip
+        default: 0
+        required: false
+    responses:
+      200:
+        description: List of analytics events
+        schema:
+          type: object
+          properties:
+            events:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  event_type:
+                    type: string
+                  user_id:
+                    type: integer
+                  session_id:
+                    type: string
+                  page_path:
+                    type: string
+                  metadata:
+                    type: object
+                  ip_address:
+                    type: string
+                  user_agent:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+            total:
+              type: integer
+              example: 150
+            limit:
+              type: integer
+              example: 100
+            offset:
+              type: integer
+              example: 0
+      500:
+        description: Internal server error
+    """
     try:
         # Query parameters
         user_id = request.args.get('user_id', type=int)
@@ -139,7 +402,64 @@ def get_events():
 
 @app.route('/api/analytics/stats', methods=['GET'])
 def get_stats():
-    """Get analytics statistics"""
+    """Get analytics statistics
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: query
+        name: user_id
+        type: integer
+        description: Filter by user ID
+        required: false
+      - in: query
+        name: event_type
+        type: string
+        description: Filter by event type
+        required: false
+      - in: query
+        name: start_date
+        type: string
+        format: date-time
+        description: Filter events from this date (ISO format)
+        required: false
+      - in: query
+        name: end_date
+        type: string
+        format: date-time
+        description: Filter events until this date (ISO format)
+        required: false
+    responses:
+      200:
+        description: Analytics statistics
+        schema:
+          type: object
+          properties:
+            total_events:
+              type: integer
+              example: 1000
+            event_type_distribution:
+              type: object
+              additionalProperties:
+                type: integer
+              example:
+                page_view: 500
+                click: 300
+                purchase: 200
+            filters:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                event_type:
+                  type: string
+                start_date:
+                  type: string
+                end_date:
+                  type: string
+      500:
+        description: Internal server error
+    """
     try:
         user_id = request.args.get('user_id', type=int)
         event_type = request.args.get('event_type')
@@ -185,7 +505,71 @@ def get_stats():
 
 @app.route('/api/analytics/event/<int:event_id>', methods=['PUT'])
 def update_event(event_id):
-    """Update an analytics event by ID"""
+    """Update an analytics event by ID
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: path
+        name: event_id
+        type: integer
+        required: true
+        description: ID of the event to update
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            event_type:
+              type: string
+              example: page_view
+            user_id:
+              type: integer
+              example: 123
+            session_id:
+              type: string
+              example: "abc123def456"
+            page_path:
+              type: string
+              example: "/dashboard"
+            metadata:
+              type: object
+              example: {"key": "value"}
+    responses:
+      200:
+        description: Event updated successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            event:
+              type: object
+              properties:
+                id:
+                  type: integer
+                event_type:
+                  type: string
+                user_id:
+                  type: integer
+                session_id:
+                  type: string
+                page_path:
+                  type: string
+                metadata:
+                  type: object
+                timestamp:
+                  type: string
+                  format: date-time
+      400:
+        description: Bad request
+      404:
+        description: Event not found
+      500:
+        description: Internal server error
+    """
     try:
         event = AnalyticsEvent.query.get_or_404(event_id)
         data = request.get_json()
@@ -218,7 +602,66 @@ def update_event(event_id):
 
 @app.route('/api/analytics/events', methods=['PUT'])
 def update_events_batch():
-    """Update multiple analytics events in a batch"""
+    """Update multiple analytics events in a batch
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - updates
+          properties:
+            updates:
+              type: array
+              items:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the event to update
+                    example: 1
+                  event_type:
+                    type: string
+                    example: page_view
+                  user_id:
+                    type: integer
+                    example: 123
+                  session_id:
+                    type: string
+                    example: "abc123def456"
+                  page_path:
+                    type: string
+                    example: "/dashboard"
+                  metadata:
+                    type: object
+                    example: {"key": "value"}
+    responses:
+      200:
+        description: Events updated successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            count:
+              type: integer
+              example: 2
+            events:
+              type: array
+              items:
+                type: object
+      400:
+        description: Bad request - missing updates array
+      500:
+        description: Internal server error
+    """
     try:
         data = request.get_json()
         
@@ -265,7 +708,33 @@ def update_events_batch():
 
 @app.route('/api/analytics/event/<int:event_id>', methods=['DELETE'])
 def delete_event(event_id):
-    """Delete an analytics event by ID"""
+    """Delete an analytics event by ID
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: path
+        name: event_id
+        type: integer
+        required: true
+        description: ID of the event to delete
+    responses:
+      200:
+        description: Event deleted successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: "Event 1 deleted successfully"
+      404:
+        description: Event not found
+      500:
+        description: Internal server error
+    """
     try:
         event = AnalyticsEvent.query.get_or_404(event_id)
         
@@ -283,7 +752,51 @@ def delete_event(event_id):
 
 @app.route('/api/analytics/events', methods=['DELETE'])
 def delete_events():
-    """Delete analytics events by filters"""
+    """Delete analytics events by filters
+    ---
+    tags:
+      - Analytics Events
+    parameters:
+      - in: query
+        name: user_id
+        type: integer
+        description: Filter by user ID
+        required: false
+      - in: query
+        name: event_type
+        type: string
+        description: Filter by event type
+        required: false
+      - in: query
+        name: start_date
+        type: string
+        format: date-time
+        description: Filter events from this date (ISO format)
+        required: false
+      - in: query
+        name: end_date
+        type: string
+        format: date-time
+        description: Filter events until this date (ISO format)
+        required: false
+    responses:
+      200:
+        description: Events deleted successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: "5 event(s) deleted successfully"
+            deleted_count:
+              type: integer
+              example: 5
+      500:
+        description: Internal server error
+    """
     try:
         # Query parameters
         user_id = request.args.get('user_id', type=int)
