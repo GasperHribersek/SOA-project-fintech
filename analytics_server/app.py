@@ -55,6 +55,7 @@ db.init_app(app)
 
 
 from models import AnalyticsEvent
+from auth_middleware import verify_token
 
 #CORS za frontend
 CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
@@ -82,6 +83,7 @@ def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
 
 @app.route('/api/analytics/event', methods=['POST'])
+@verify_token
 def track_event():
     """Track an analytics event
     ---
@@ -156,9 +158,11 @@ def track_event():
             return jsonify({'error': 'event_type is required'}), 400
         
         # Create analytics event
+        # Use user_id from JWT token if not provided in request
+        user_id = data.get('user_id') or (hasattr(request, 'user') and request.user.get('userId'))
         event = AnalyticsEvent(
             event_type=data['event_type'],
-            user_id=data.get('user_id'),
+            user_id=user_id,
             session_id=data.get('session_id'),
             page_path=data.get('page_path'),
             event_metadata=data.get('metadata', {}),
@@ -180,6 +184,7 @@ def track_event():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analytics/events', methods=['POST'])
+@verify_token
 def track_events_batch():
     """Track multiple analytics events in a batch
     ---
@@ -250,14 +255,22 @@ def track_events_batch():
         if not data or 'events' not in data:
             return jsonify({'error': 'events array is required'}), 400
         
+        # Get user_id from JWT token if not provided in request
+        default_user_id = None
+        if hasattr(request, 'user') and request.user:
+            default_user_id = request.user.get('userId')
+        
         events = []
         for event_data in data['events']:
             if 'event_type' not in event_data:
                 continue
+            
+            # Use user_id from event data, or from JWT token, or None
+            user_id = event_data.get('user_id') or default_user_id
                 
             event = AnalyticsEvent(
                 event_type=event_data['event_type'],
-                user_id=event_data.get('user_id'),
+                user_id=user_id,
                 session_id=event_data.get('session_id'),
                 page_path=event_data.get('page_path'),
                 event_metadata=event_data.get('metadata', {}),
@@ -280,6 +293,7 @@ def track_events_batch():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analytics/events', methods=['GET'])
+@verify_token
 def get_events():
     """Get analytics events with optional filters
     ---
@@ -401,6 +415,7 @@ def get_events():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analytics/stats', methods=['GET'])
+@verify_token
 def get_stats():
     """Get analytics statistics
     ---
@@ -504,6 +519,7 @@ def get_stats():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analytics/event/<int:event_id>', methods=['PUT'])
+@verify_token
 def update_event(event_id):
     """Update an analytics event by ID
     ---
@@ -601,6 +617,7 @@ def update_event(event_id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analytics/events', methods=['PUT'])
+@verify_token
 def update_events_batch():
     """Update multiple analytics events in a batch
     ---
@@ -707,6 +724,7 @@ def update_events_batch():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analytics/event/<int:event_id>', methods=['DELETE'])
+@verify_token
 def delete_event(event_id):
     """Delete an analytics event by ID
     ---
@@ -751,6 +769,7 @@ def delete_event(event_id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analytics/events', methods=['DELETE'])
+@verify_token
 def delete_events():
     """Delete analytics events by filters
     ---

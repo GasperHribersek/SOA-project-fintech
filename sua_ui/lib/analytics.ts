@@ -1,5 +1,5 @@
-const ANALYTICS_API_URL =
-  process.env.NEXT_PUBLIC_ANALYTICS_URL || "http://localhost:5001";
+import { analyticsApi, ApiException } from "./api";
+import { getUser, isAuthenticated } from "./auth";
 
 function getSessionId(): string {
   if (typeof window === "undefined") return "";
@@ -23,27 +23,37 @@ export async function trackEvent(
   } = {}
 ): Promise<void> {
   try {
-    const response = await fetch(`${ANALYTICS_API_URL}/api/analytics/event`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        event_type: eventType,
-        user_id: data.userId,
-        session_id: getSessionId(),
-        page_path:
-          data.pagePath ||
-          (typeof window !== "undefined" ? window.location.pathname : ""),
-        metadata: data.metadata || {},
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Failed to track event:", await response.text());
+    // Check if user is authenticated before tracking
+    // Analytics requires JWT token, so skip if not authenticated
+    if (!isAuthenticated()) {
+      // Silently skip tracking if user is not authenticated
+      return;
     }
+
+    // Get user ID from stored user data if not provided
+    const user = getUser();
+    const userId = data.userId || user?.id;
+
+    await analyticsApi.trackEvent({
+      event_type: eventType,
+      user_id: userId,
+      session_id: getSessionId(),
+      page_path:
+        data.pagePath ||
+        (typeof window !== "undefined" ? window.location.pathname : ""),
+      metadata: data.metadata || {},
+    });
   } catch (error) {
-    console.error("Error tracking event:", error);
+    // Log error but don't throw - analytics failures shouldn't break the app
+    // Only log if it's not an authentication error (401)
+    if (error instanceof ApiException) {
+      if (error.status !== 401) {
+        console.error("Failed to track event:", error.message, error.details);
+      }
+      // Silently ignore 401 errors for analytics - user might not be logged in
+    } else {
+      console.error("Error tracking event:", error);
+    }
   }
 }
 

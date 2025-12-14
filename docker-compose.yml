@@ -45,6 +45,27 @@ services:
       timeout: 20s
       retries: 10
 
+  # Analytics Service Database
+  analytics-db:
+    image: postgres:15-alpine
+    container_name: analytics-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: analytics_user
+      POSTGRES_PASSWORD: analytics_pass
+      POSTGRES_DB: analytics_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - analytics-db-data:/var/lib/postgresql/data
+    networks:
+      - fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics_user -d analytics_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Auth Service
   auth-service:
     build:
@@ -54,6 +75,8 @@ services:
     restart: unless-stopped
     env_file:
       - ./auth-service/.env
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
     ports:
       - "3001:3001"
     depends_on:
@@ -71,11 +94,59 @@ services:
     restart: unless-stopped
     env_file:
       - ./user-service/.env
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
+      AUTH_SERVICE_URL: http://auth-service:3001
     ports:
       - "3002:3002"
     depends_on:
       user-db:
         condition: service_healthy
+    networks:
+      - fintech-network
+
+  # Analytics Service
+  analytics-server:
+    build:
+      context: ./analytics_server
+      dockerfile: Dockerfile
+    container_name: analytics-server
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://analytics_user:analytics_pass@analytics-db:5432/analytics_db
+      FLASK_ENV: development
+      JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
+      AUTH_SERVICE_URL: http://auth-service:3001
+    ports:
+      - "5001:5000"
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+    networks:
+      - fintech-network
+
+  # UI Service
+  sua_ui:
+    build:
+      context: ./sua_ui
+      dockerfile: Dockerfile
+    container_name: sua_ui
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_ANALYTICS_URL: http://localhost:5001
+      NEXT_PUBLIC_AUTH_SERVICE_URL: http://localhost:3001
+      NEXT_PUBLIC_USER_SERVICE_URL: http://localhost:3002
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reload in development
+      - ./sua_ui:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - analytics-server
+      - auth-service
+      - user-service
     networks:
       - fintech-network
 
@@ -86,3 +157,4 @@ networks:
 volumes:
   auth-db-data:
   user-db-data:
+  analytics-db-data:

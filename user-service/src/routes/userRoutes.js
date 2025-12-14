@@ -1,22 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
 // POST
+// createProfile is called by auth-service, so no JWT required
 router.post('/profile', userController.createProfile);
-router.post('/:userId/settings', userController.createUserSettings);
+router.post('/:userId/settings', verifyToken, userController.createUserSettings);
 
 // GET
-router.get('/', userController.getAllProfiles);
-router.get('/:userId', userController.getProfileByUserId);
+router.get('/', verifyToken, userController.getAllProfiles);
+router.get('/:userId', verifyToken, userController.getProfileByUserId);
 
 // PUT
-router.put('/:userId', userController.updateProfile);
-router.put('/:userId/settings', userController.updateUserSettings);
+router.put('/:userId', verifyToken, userController.updateProfile);
+router.put('/:userId/settings', verifyToken, userController.updateUserSettings);
+// sync-credentials is called by auth-service, so no JWT required
 router.put('/:userId/sync-credentials', userController.syncCredentials);
 
 // DELETE
-router.delete('/:userId', userController.deleteProfile);
-router.delete('/:userId/settings', userController.resetUserSettings);
+router.delete('/:userId', verifyToken, userController.deleteProfile);
+router.delete('/:userId/settings', verifyToken, userController.resetUserSettings);
 
 module.exports = router;

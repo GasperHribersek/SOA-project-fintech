@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { SimpleLineChart } from "@/components/ui/chart";
 import {
     ArrowLeft,
@@ -21,6 +22,7 @@ import {
     ArrowDownCircle,
     ArrowUpCircle,
     PiggyBank,
+    LogOut,
 } from "lucide-react";
 import {
     trackPageView,
@@ -30,12 +32,20 @@ import {
     trackChartInteraction,
     trackEvent,
 } from "@/lib/analytics";
+import { authApi } from "@/lib/api";
+import { removeToken, getUser, isAuthenticated } from "@/lib/auth";
+import { handleApiError } from "@/lib/error-handler";
+import { toast } from "sonner";
 
 export default function UserPage() {
-    // Demo uporabniški podatki
-    const user = {
+    const router = useRouter();
+    const [authenticatedUser, setAuthenticatedUser] = useState<{ id: number; username: string; email: string; name?: string } | null>(null);
+
+    // Demo uporabniški podatki (fallback)
+    const demoUser = {
         id: 1,
         name: "Janez Novak",
+        username: "janeznovak",
         email: "janez.novak@example.com",
         phone: "+386 1 234 5678",
         location: "Ljubljana, Slovenija",
@@ -45,6 +55,11 @@ export default function UserPage() {
         bio: "Strasten programski inženir s strokovnim znanjem o storitveno usmerjenih arhitekturah in sodobnem spletnem razvoju. Vedno se učim in gradim inovativne rešitve.",
         avatar: "https://placehold.co/200x200/4F46E5/FFFFFF?text=JN",
     };
+
+    // Merge authenticated user with demo user data for display
+    const user = authenticatedUser
+        ? { ...demoUser, ...authenticatedUser, name: authenticatedUser.name || authenticatedUser.username || authenticatedUser.email }
+        : demoUser;
 
     const stats = [
         { label: "Skupno stanje", value: "12.450,00", suffix: "€", icon: Wallet, color: "text-primary" },
@@ -102,10 +117,37 @@ export default function UserPage() {
     const [investmentType, setInvestmentType] = useState("etf");
     const [investmentHorizon, setInvestmentHorizon] = useState("3");
 
-    // Track page view on mount
+    // Check authentication and load user data
     useEffect(() => {
-        trackPageView('/user', user.id);
-    }, [user.id]);
+        const checkAuth = () => {
+            if (isAuthenticated()) {
+                const storedUser = getUser();
+                if (storedUser) {
+                    setAuthenticatedUser(storedUser);
+                    trackPageView('/user', storedUser.id);
+                } else {
+                    trackPageView('/user', demoUser.id);
+                }
+            } else {
+                trackPageView('/user', demoUser.id);
+            }
+        };
+        checkAuth();
+    }, []);
+
+    const handleLogout = async () => {
+        try {
+            await authApi.logout();
+            removeToken();
+            toast.success("Uspešno odjavljeni");
+            router.push("/");
+        } catch (error) {
+            // Even if API call fails, remove token locally
+            removeToken();
+            handleApiError(error);
+            router.push("/");
+        }
+    };
 
     const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -239,8 +281,17 @@ export default function UserPage() {
                             <ArrowLeft className="h-4 w-4" />
                             <span className="text-sm font-medium">Nazaj na domačo stran</span>
                         </Link>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-4">
                             <span className="text-xl font-semibold text-foreground">Uporabniški profil</span>
+                            {isAuthenticated() && (
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    Odjava
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -265,13 +316,9 @@ export default function UserPage() {
                                         Osebni račun · EUR
                                     </p>
                                 </div>
-                                <Image
-                                    src={user.avatar}
-                                    alt={user.name}
-                                    width={64}
-                                    height={64}
-                                    className="h-12 w-12 rounded-full border border-white/30 sm:h-14 sm:w-14"
-                                />
+                                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-white/30 bg-white/20 flex items-center justify-center text-white font-semibold text-lg sm:text-xl">
+                                    {authenticatedUser ? (authenticatedUser.name || authenticatedUser.username || authenticatedUser.email).charAt(0).toUpperCase() : 'JN'}
+                                </div>
                             </div>
                             <div className="mt-6 flex flex-wrap items-center gap-3">
                                 <button
@@ -335,10 +382,10 @@ export default function UserPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-medium text-card-foreground">
-                                            {user.name}
+                                            {authenticatedUser ? (authenticatedUser.name || authenticatedUser.username || authenticatedUser.email) : user.name}
                                         </p>
                                         <p className="text-xs">
-                                            Član od {user.joinDate}
+                                            {authenticatedUser ? authenticatedUser.email : `Član od ${user.joinDate}`}
                                         </p>
                                     </div>
                                 </div>

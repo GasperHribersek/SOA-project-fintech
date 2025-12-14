@@ -14,6 +14,12 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <Link
+                href="/login"
+                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                Prijava
+              </Link>
+              <Link
                 href="/user"
                 className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               >
