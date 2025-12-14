@@ -39,9 +39,9 @@ services:
 
   ui:
     build:
-      context: ../soa_ui
+      context: ../sua_ui
       dockerfile: Dockerfile
-    container_name: soa_ui
+    container_name: sua_ui
     ports:
       - "3000:3000"
     environment:
