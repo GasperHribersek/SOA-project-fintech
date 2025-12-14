@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: analytics_db
+    environment:
+      POSTGRES_USER: analytics_user
+      POSTGRES_PASSWORD: analytics_pass
+      POSTGRES_DB: analytics_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics_user -d analytics_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  analytics_server:
+    build: .
+    container_name: analytics_server
+    ports:
+      - "5001:5000"
+    environment:
+      DATABASE_URL: postgresql://analytics_user:analytics_pass@db:5432/analytics_db
+      FLASK_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  ui:
+    build:
+      context: ../soa_ui
+      dockerfile: Dockerfile
+    container_name: soa_ui
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_ANALYTICS_URL: http://localhost:5001
+    depends_on:
+      - analytics_server
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

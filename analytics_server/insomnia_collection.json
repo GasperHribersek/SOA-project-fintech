@@ -1,0 +1,594 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-01-01T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "req_health_check",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/health",
+      "name": "Health Check",
+      "description": "Check if the analytics server is running",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_track_single_event",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/event",
+      "name": "Track Single Event",
+      "description": "Track a single analytics event",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event_type\": \"page_view\",\n  \"user_id\": 1,\n  \"session_id\": \"abc123\",\n  \"page_path\": \"/user\",\n  \"metadata\": {\n    \"additional\": \"data\",\n    \"source\": \"dashboard\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1704067200001,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_track_payment_initiated",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/event",
+      "name": "Track Payment Initiated",
+      "description": "Track when a payment is initiated",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event_type\": \"payment_initiated\",\n  \"user_id\": 1,\n  \"session_id\": \"abc123\",\n  \"page_path\": \"/user\",\n  \"metadata\": {\n    \"amount\": 50.00,\n    \"currency\": \"EUR\",\n    \"payment_method\": \"card\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1704067200002,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_track_payment_completed",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/event",
+      "name": "Track Payment Completed",
+      "description": "Track when a payment is successfully completed",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event_type\": \"payment_completed\",\n  \"user_id\": 1,\n  \"session_id\": \"abc123\",\n  \"page_path\": \"/user\",\n  \"metadata\": {\n    \"amount\": 50.00,\n    \"currency\": \"EUR\",\n    \"transaction_id\": \"tx_123456789\",\n    \"payment_method\": \"card\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1704067200003,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_track_button_click",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/event",
+      "name": "Track Button Click",
+      "description": "Track when a user clicks a button",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event_type\": \"button_click\",\n  \"user_id\": 1,\n  \"session_id\": \"abc123\",\n  \"page_path\": \"/user\",\n  \"metadata\": {\n    \"button_id\": \"payment_button\",\n    \"button_text\": \"Plačaj\",\n    \"location\": \"payment_modal\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1704067200004,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_track_batch_events",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/events",
+      "name": "Track Batch Events",
+      "description": "Track multiple events in a single request",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"events\": [\n    {\n      \"event_type\": \"page_view\",\n      \"user_id\": 1,\n      \"page_path\": \"/user\"\n    },\n    {\n      \"event_type\": \"button_click\",\n      \"user_id\": 1,\n      \"metadata\": {\n        \"button\": \"payment\"\n      }\n    },\n    {\n      \"event_type\": \"chart_interaction\",\n      \"user_id\": 1,\n      \"metadata\": {\n        \"chart_type\": \"expense_distribution\",\n        \"action\": \"hover\"\n      }\n    }\n  ]\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1704067200005,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_all_events",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/events",
+      "name": "Get All Events",
+      "description": "Get all analytics events (with pagination)",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_limit",
+          "name": "limit",
+          "value": "100",
+          "description": "Number of results to return"
+        },
+        {
+          "id": "pair_offset",
+          "name": "offset",
+          "value": "0",
+          "description": "Pagination offset"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200006,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_events_by_user",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/events",
+      "name": "Get Events by User ID",
+      "description": "Get all events for a specific user",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_user_id",
+          "name": "user_id",
+          "value": "1",
+          "description": "User ID to filter by"
+        },
+        {
+          "id": "pair_limit",
+          "name": "limit",
+          "value": "50"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200007,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_events_by_type",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/events",
+      "name": "Get Events by Type",
+      "description": "Get all events of a specific type",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_event_type",
+          "name": "event_type",
+          "value": "payment_completed",
+          "description": "Event type to filter by"
+        },
+        {
+          "id": "pair_limit",
+          "name": "limit",
+          "value": "50"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200008,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_events_by_date_range",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/events",
+      "name": "Get Events by Date Range",
+      "description": "Get events within a specific date range",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_start_date",
+          "name": "start_date",
+          "value": "2024-01-01T00:00:00",
+          "description": "Start date in ISO format"
+        },
+        {
+          "id": "pair_end_date",
+          "name": "end_date",
+          "value": "2024-12-31T23:59:59",
+          "description": "End date in ISO format"
+        },
+        {
+          "id": "pair_limit",
+          "name": "limit",
+          "value": "100"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200009,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_stats",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/stats",
+      "name": "Get Analytics Stats",
+      "description": "Get analytics statistics and aggregations",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200010,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_stats_by_user",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/stats",
+      "name": "Get Stats by User",
+      "description": "Get analytics statistics for a specific user",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_user_id",
+          "name": "user_id",
+          "value": "1",
+          "description": "User ID to filter by"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200011,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_stats_by_date_range",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/stats",
+      "name": "Get Stats by Date Range",
+      "description": "Get analytics statistics for a specific date range",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_start_date",
+          "name": "start_date",
+          "value": "2024-01-01T00:00:00",
+          "description": "Start date in ISO format"
+        },
+        {
+          "id": "pair_end_date",
+          "name": "end_date",
+          "value": "2024-12-31T23:59:59",
+          "description": "End date in ISO format"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200012,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_update_event",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/event/1",
+      "name": "Update Event by ID",
+      "description": "Update an analytics event by its ID",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event_type\": \"page_view_updated\",\n  \"user_id\": 1,\n  \"page_path\": \"/user/updated\",\n  \"metadata\": {\n    \"updated\": true,\n    \"reason\": \"correction\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1704067200013,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_update_events_batch",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/events",
+      "name": "Update Events Batch",
+      "description": "Update multiple analytics events in a batch",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"updates\": [\n    {\n      \"id\": 1,\n      \"event_type\": \"page_view_updated\",\n      \"metadata\": {\n        \"updated\": true\n      }\n    },\n    {\n      \"id\": 2,\n      \"user_id\": 2,\n      \"page_path\": \"/updated/path\"\n    }\n  ]\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1704067200014,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_delete_event",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/event/1",
+      "name": "Delete Event by ID",
+      "description": "Delete an analytics event by its ID",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200015,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_delete_events",
+      "parentId": "fld_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "url": "http://localhost:5001/api/analytics/events",
+      "name": "Delete Events by Filters",
+      "description": "Delete analytics events matching specified filters",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_user_id",
+          "name": "user_id",
+          "value": "1",
+          "description": "User ID to filter by"
+        },
+        {
+          "id": "pair_event_type",
+          "name": "event_type",
+          "value": "test_event",
+          "description": "Event type to filter by"
+        },
+        {
+          "id": "pair_start_date",
+          "name": "start_date",
+          "value": "2024-01-01T00:00:00",
+          "description": "Start date in ISO format"
+        },
+        {
+          "id": "pair_end_date",
+          "name": "end_date",
+          "value": "2024-12-31T23:59:59",
+          "description": "End date in ISO format"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1704067200016,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_analytics",
+      "parentId": "wrk_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "name": "Analytics API",
+      "description": "Collection of requests for the Analytics Server API",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1704067200000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "wrk_analytics",
+      "parentId": null,
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "name": "Analytics Server",
+      "description": "Flask Analytics Server API Collection",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_analytics",
+      "modified": 1704067200000,
+      "created": 1704067200000,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:5001"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1704067200000,
+      "_type": "environment"
+    }
+  ]
+}
