@@ -1,0 +1,88 @@
+services:
+  # Auth Service Database
+  auth-db:
+    image: mysql:8.0
+    container_name: auth-mysql
+    restart: unless-stopped
+    env_file:
+      - ./auth-service/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${AUTH_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${AUTH_DB_NAME}
+      MYSQL_USER: ${AUTH_DB_USER}
+      MYSQL_PASSWORD: ${AUTH_DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - auth-db-data:/var/lib/mysql
+    networks:
+      - fintech-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # User Service Database
+  user-db:
+    image: mysql:8.0
+    container_name: user-mysql
+    restart: unless-stopped
+    env_file:
+      - ./user-service/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${USER_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${USER_DB_NAME}
+      MYSQL_USER: ${USER_DB_USER}
+      MYSQL_PASSWORD: ${USER_DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - user-db-data:/var/lib/mysql
+    networks:
+      - fintech-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    restart: unless-stopped
+    env_file:
+      - ./auth-service/.env
+    ports:
+      - "3001:3001"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - fintech-network
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    restart: unless-stopped
+    env_file:
+      - ./user-service/.env
+    ports:
+      - "3002:3002"
+    depends_on:
+      user-db:
+        condition: service_healthy
+    networks:
+      - fintech-network
+
+networks:
+  fintech-network:
+    driver: bridge
+
+volumes:
+  auth-db-data:
+  user-db-data:

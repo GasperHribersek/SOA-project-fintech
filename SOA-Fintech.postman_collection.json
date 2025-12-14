@@ -1,0 +1,379 @@
+{
+	"info": {
+		"_postman_id": "soa-fintech-collection",
+		"name": "SOA Fintech",
+		"description": "API collection for Auth Service and User Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "authUrl",
+			"value": "http://localhost:3001/api/auth"
+		},
+		{
+			"key": "userUrl",
+			"value": "http://localhost:3002/api/users"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": "1"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth Service",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{authUrl}}/register",
+							"host": ["{{authUrl}}"],
+							"path": ["register"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set('token', jsonData.token);",
+									"}",
+									"if (jsonData.userId) {",
+									"    pm.collectionVariables.set('userId', jsonData.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{authUrl}}/login",
+							"host": ["{{authUrl}}"],
+							"path": ["login"]
+						}
+					}
+				},
+				{
+					"name": "Validate Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{authUrl}}/validate-token",
+							"host": ["{{authUrl}}"],
+							"path": ["validate-token"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{authUrl}}/logout",
+							"host": ["{{authUrl}}"],
+							"path": ["logout"]
+						}
+					}
+				},
+				{
+					"name": "Get User Sessions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authUrl}}/sessions/{{userId}}",
+							"host": ["{{authUrl}}"],
+							"path": ["sessions", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentPassword\": \"password123\",\n    \"newPassword\": \"newpassword456\"\n}"
+						},
+						"url": {
+							"raw": "{{authUrl}}/password/{{userId}}",
+							"host": ["{{authUrl}}"],
+							"path": ["password", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Credentials",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newusername\",\n    \"email\": \"newemail@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{authUrl}}/credentials/{{userId}}",
+							"host": ["{{authUrl}}"],
+							"path": ["credentials", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete All Sessions",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{authUrl}}/sessions/{{userId}}",
+							"host": ["{{authUrl}}"],
+							"path": ["sessions", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Single Session",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{authUrl}}/session/1",
+							"host": ["{{authUrl}}"],
+							"path": ["session", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Service",
+			"item": [
+				{
+					"name": "Create Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": 1,\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"phone\": \"+386 40 123 456\",\n    \"address\": \"Ljubljana, Slovenia\",\n    \"dateOfBirth\": \"1990-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{userUrl}}/profile",
+							"host": ["{{userUrl}}"],
+							"path": ["profile"]
+						}
+					}
+				},
+				{
+					"name": "Create User Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"language\": \"sl\",\n    \"currency\": \"EUR\",\n    \"notificationsEnabled\": true,\n    \"emailNotifications\": true,\n    \"theme\": \"light\",\n    \"timezone\": \"Europe/Ljubljana\"\n}"
+						},
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}/settings",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Get All Profiles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{userUrl}}",
+							"host": ["{{userUrl}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Profile by User ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Smith\",\n    \"phone\": \"+386 40 987 654\",\n    \"address\": \"Maribor, Slovenia\",\n    \"dateOfBirth\": \"1992-05-20\",\n    \"status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Update User Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"language\": \"en\",\n    \"currency\": \"USD\",\n    \"notificationsEnabled\": false,\n    \"emailNotifications\": true,\n    \"theme\": \"dark\",\n    \"timezone\": \"UTC\"\n}"
+						},
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}/settings",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Sync Credentials",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"synceduser\",\n    \"email\": \"synced@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}/sync-credentials",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}", "sync-credentials"]
+						}
+					}
+				},
+				{
+					"name": "Deactivate Profile (Soft Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Profile (Permanent)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}?permanent=true",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}"],
+							"query": [
+								{
+									"key": "permanent",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Reset User Settings",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{userUrl}}/{{userId}}/settings",
+							"host": ["{{userUrl}}"],
+							"path": ["{{userId}}", "settings"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
