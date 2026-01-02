@@ -5,7 +5,7 @@ const { getPool } = require('../config/database');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://user-service:3002';
 
-// POST: Register a new user (creates auth credentials)
+// POST: Registriraj novega uporabnika 
 exports.register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
 
     const userId = result.insertId;
 
-    // Notify user-service to create user profile
+    // Obveščaj user-service, da ustvari profile uporabnika
     try {
       await fetch(`${USER_SERVICE_URL}/api/users/profile`, {
         method: 'POST',
@@ -47,7 +47,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// POST: Login user
+// POST: Prijavi uporabnika
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -100,7 +100,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// POST: Logout (invalidate current token)
+// POST: Odjavi uporabnika (invalidiraj trenutni token)
 exports.logout = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -120,7 +120,7 @@ exports.logout = async (req, res) => {
   }
 };
 
-// GET: Validate token
+// GET: Preveri token
 exports.validateToken = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -166,7 +166,7 @@ exports.validateToken = async (req, res) => {
   }
 };
 
-// GET: Get user sessions
+// GET: Pridobi seje uporabnika
 exports.getUserSessions = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -183,7 +183,7 @@ exports.getUserSessions = async (req, res) => {
   }
 };
 
-// PUT: Update password
+// PUT: Posodobi geslo
 exports.updatePassword = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -218,7 +218,7 @@ exports.updatePassword = async (req, res) => {
   }
 };
 
-// PUT: Update credentials (username/email)
+// PUT: Posodobi credentials (username/email)
 exports.updateCredentials = async (req, res) => {
   try {
     const { userId } = req.params;

@@ -1,9 +1,15 @@
+// ============================================
+// RABBITMQ - Knjižnica za povezavo z RabbitMQ
+// ============================================
 const amqp = require('amqplib');
 const { v4: uuidv4 } = require('uuid');
 
 class Logger {
     constructor(serviceName) {
         this.serviceName = serviceName;
+        // ============================================
+        // RABBITMQ - Spremenljivke za RabbitMQ povezavo
+        // ============================================
         this.connection = null;
         this.channel = null;
         this.exchange = 'logs_exchange';
@@ -13,17 +19,26 @@ class Logger {
 
     async initialize() {
         try {
+            // ============================================
+            // RABBITMQ - Vzpostavljanje povezave z RabbitMQ
+            // ============================================
             const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672';
             this.connection = await amqp.connect(rabbitmqUrl);
             this.channel = await this.connection.createChannel();
 
-            // Declare exchange
+            // ============================================
+            // RABBITMQ - Ustvarjanje exchange-a tipa 'fanout'
+            // ============================================
             await this.channel.assertExchange(this.exchange, 'fanout', { durable: true });
 
-            // Declare queue
+            // ============================================
+            // RABBITMQ - Ustvarjanje trajne vrste (queue)
+            // ============================================
             await this.channel.assertQueue(this.queue, { durable: true });
 
-            // Bind queue to exchange
+            // ============================================
+            // RABBITMQ - Povezovanje vrste z exchange-om
+            // ============================================
             await this.channel.bindQueue(this.queue, this.exchange, '');
 
             console.log(`Logger initialized for ${this.serviceName}`);
@@ -67,6 +82,10 @@ class Logger {
                 ...additionalData
             };
 
+            // ============================================
+            // RABBITMQ - Objavljanje log sporočila v RabbitMQ exchange
+            // Sporočilo se pošlje v JSON formatu kot Buffer
+            // ============================================
             this.channel.publish(
                 this.exchange,
                 '',

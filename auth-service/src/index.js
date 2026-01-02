@@ -8,24 +8,24 @@ const { getLogger, correlationMiddleware, loggingMiddleware } = require('./utils
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Initialize logger
+//inicializiraj logger
 const logger = getLogger('auth-service');
 
-// Middleware
+// middleware
 app.use(cors());
 app.use(express.json());
 app.use(correlationMiddleware('auth-service'));
 app.use(loggingMiddleware(logger));
 
-// Routes
+//routes
 app.use('/api/auth', authRoutes);
 
-// Health check
+//health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'auth-service' });
 });
 
-// Initialize database and start server
+// inicializiraj bazo in startaj server
 const startServer = async () => {
   try {
     await db.initializeDatabase();
