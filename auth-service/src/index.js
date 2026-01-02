@@ -3,13 +3,19 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const db = require('./config/database');
+const { getLogger, correlationMiddleware, loggingMiddleware } = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Initialize logger
+const logger = getLogger('auth-service');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware('auth-service'));
+app.use(loggingMiddleware(logger));
 
 // Routes
 app.use('/api/auth', authRoutes);

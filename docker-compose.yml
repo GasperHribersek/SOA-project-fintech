@@ -66,6 +66,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - fintech-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Auth Service
   auth-service:
     build:
@@ -77,10 +98,13 @@ services:
       - ./auth-service/.env
     environment:
       JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
     ports:
       - "3001:3001"
     depends_on:
       auth-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - fintech-network
@@ -97,10 +121,13 @@ services:
     environment:
       JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
       AUTH_SERVICE_URL: http://auth-service:3001
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
     ports:
       - "3002:3002"
     depends_on:
       user-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - fintech-network
@@ -117,10 +144,34 @@ services:
       FLASK_ENV: development
       JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
       AUTH_SERVICE_URL: http://auth-service:3001
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
     ports:
       - "5001:5000"
     depends_on:
       analytics-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fintech-network
+
+  # Log Management Service
+  log-service:
+    build:
+      context: ./log-service
+      dockerfile: Dockerfile
+    container_name: log-service
+    restart: unless-stopped
+    environment:
+      PORT: 5002
+      DATABASE_URL: postgresql://analytics_user:analytics_pass@analytics-db:5432/analytics_db
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+    ports:
+      - "5002:5002"
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - fintech-network
@@ -158,3 +209,4 @@ volumes:
   auth-db-data:
   user-db-data:
   analytics-db-data:
+  rabbitmq-data:

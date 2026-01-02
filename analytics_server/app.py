@@ -1,9 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 from flasgger import Swagger
 from datetime import datetime
 from models import db
 import os
+import time
 
 app = Flask(__name__)
 
@@ -56,9 +57,34 @@ db.init_app(app)
 
 from models import AnalyticsEvent
 from auth_middleware import verify_token
+from logger import get_logger, create_logging_middleware, log_response
 
 #CORS za frontend
 CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
+
+# Initialize logger
+logger = get_logger('analytics-server')
+logging_middleware = create_logging_middleware(logger)
+
+# Add logging middleware
+@app.before_request
+def before_request():
+    g.start_time = time.time()
+    g.correlation_id = logging_middleware()
+
+@app.after_request
+def after_request(response):
+    if hasattr(g, 'correlation_id') and hasattr(g, 'start_time'):
+        response.headers['X-Correlation-Id'] = g.correlation_id
+        log_response(
+            logger,
+            g.correlation_id,
+            request.url,
+            request.method,
+            response.status_code,
+            g.start_time
+        )
+    return response
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -173,6 +199,8 @@ def track_event():
         db.session.add(event)
         db.session.commit()
         
+        logger.info(request.url, g.correlation_id, 'Event tracked successfully', {'event_id': event.id})
+
         return jsonify({
             'success': True,
             'event_id': event.id,
