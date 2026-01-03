@@ -1,0 +1,7 @@
+{
+  "name": "Transactions Service",
+  "version": "1.0.0",
+  "description": "API documentation for the Transactions microservice",
+  "title": "Transactions API",
+  "url": "http://localhost:3001"
+}
