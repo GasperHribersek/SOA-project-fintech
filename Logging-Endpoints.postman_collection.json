@@ -1,0 +1,356 @@
+{
+  "info": {
+    "name": "SOA Fintech - Logging Endpoints",
+    "description": "Collection for testing RabbitMQ logging endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Logs Management",
+      "item": [
+        {
+          "name": "Fetch Logs from RabbitMQ",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs"]
+            },
+            "description": "Fetches all logs from RabbitMQ queue and stores them in the database"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Logs (Today)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs/{{today}}/{{today}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs", "{{today}}", "{{today}}"]
+            },
+            "description": "Get all logs from today"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Logs by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs/2024-01-01/2024-12-31",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs", "2024-01-01", "2024-12-31"]
+            },
+            "description": "Get logs between two dates"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Error Logs Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs/2024-01-01/2024-12-31?level=ERROR",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs", "2024-01-01", "2024-12-31"],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "ERROR"
+                }
+              ]
+            },
+            "description": "Get only ERROR level logs"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Logs by Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs/2024-01-01/2024-12-31?service=auth-service",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs", "2024-01-01", "2024-12-31"],
+              "query": [
+                {
+                  "key": "service",
+                  "value": "auth-service"
+                }
+              ]
+            },
+            "description": "Get logs from auth-service only"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Logs by Correlation ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs/2024-01-01/2024-12-31?correlation_id={{correlation_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs", "2024-01-01", "2024-12-31"],
+              "query": [
+                {
+                  "key": "correlation_id",
+                  "value": "{{correlation_id}}"
+                }
+              ]
+            },
+            "description": "Get all logs for a specific correlation ID (trace a request)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Logs with Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs/2024-01-01/2024-12-31?limit=50&offset=0",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs", "2024-01-01", "2024-12-31"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Get logs with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete All Logs",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/logs",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["logs"]
+            },
+            "description": "Delete all logs from the database"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Test Correlation ID",
+      "item": [
+        {
+          "name": "Auth - Register with Correlation ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "test-register-{{$randomUUID}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser{{$randomInt}}\",\n  \"email\": \"test{{$randomInt}}@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register with custom correlation ID to trace the request"
+          },
+          "response": []
+        },
+        {
+          "name": "Auth - Login with Correlation ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "test-login-{{$randomUUID}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with custom correlation ID"
+          },
+          "response": []
+        },
+        {
+          "name": "User - Get Profile with Correlation ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "test-profile-{{$randomUUID}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3002/api/users/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["api", "users", "1"]
+            },
+            "description": "Get user profile with correlation ID (will propagate to auth service if token validation is needed)"
+          },
+          "response": []
+        },
+        {
+          "name": "Analytics - Track Event with Correlation ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "test-analytics-{{$randomUUID}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_type\": \"page_view\",\n  \"page_path\": \"/dashboard\",\n  \"metadata\": {\n    \"test\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/analytics/event",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "analytics", "event"]
+            },
+            "description": "Track analytics event with correlation ID"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "RabbitMQ Management",
+      "item": [
+        {
+          "name": "Get Queue Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic YWRtaW46YWRtaW4xMjM=",
+                "description": "admin:admin123 in base64"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:15672/api/queues/%2F/logging_queue",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "15672",
+              "path": ["api", "queues", "%2F", "logging_queue"]
+            },
+            "description": "Get information about the logging queue from RabbitMQ Management API"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Queues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic YWRtaW46YWRtaW4xMjM="
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:15672/api/queues",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "15672",
+              "path": ["api", "queues"]
+            },
+            "description": "Get all queues in RabbitMQ"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "correlation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "today",
+      "value": "2024-01-15",
+      "type": "string"
+    }
+  ]
+}

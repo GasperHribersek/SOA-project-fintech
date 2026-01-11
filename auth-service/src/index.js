@@ -6,13 +6,19 @@ const db = require('./config/database');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+const { getLogger, correlationMiddleware, loggingMiddleware } = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
+//inicializiraj logger
+const logger = getLogger('auth-service');
+
+// middleware
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware('auth-service'));
+app.use(loggingMiddleware(logger));
 
 // Swagger UI - serve OpenAPI spec
 // Register docs before routes to avoid accidental route collisions
@@ -36,14 +42,15 @@ app.get('/api/auth/openapi.json', (req, res) => {
 });
 
 // Routes
+//routes
 app.use('/api/auth', authRoutes);
 
-// Health check
+//health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'auth-service' });
 });
 
-// Initialize database and start server
+// inicializiraj bazo in startaj server
 const startServer = async () => {
   try {
     await db.initializeDatabase();

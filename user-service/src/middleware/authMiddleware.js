@@ -57,12 +57,19 @@ const verifyTokenViaService = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
 
-    // Call auth-service to verify token
+    // Call auth-service to verify token - propagate correlation ID
+    const headers = {
+      'Authorization': `Bearer ${token}`
+    };
+
+    // Propagate correlation ID if present
+    if (req.correlationId) {
+      headers['X-Correlation-Id'] = req.correlationId;
+    }
+
     const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/validate-token`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers
     });
 
     if (!response.ok) {

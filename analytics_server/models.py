@@ -34,4 +34,3 @@ class AnalyticsEvent(db.Model):
             'user_agent': self.user_agent,
             'timestamp': self.timestamp.isoformat()
         }
-

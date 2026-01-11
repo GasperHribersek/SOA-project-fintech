@@ -6,13 +6,19 @@ const db = require('./config/database');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+const { getLogger, correlationMiddleware, loggingMiddleware } = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+// Initialize logger
+const logger = getLogger('user-service');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware('user-service'));
+app.use(loggingMiddleware(logger));
 
 // Swagger UI - serve OpenAPI spec
 // NOTE: register docs BEFORE mounting the router so that paths like '/docs' are not treated
