@@ -1,6 +1,6 @@
 services:
   statistics-service:
-    image: gasperhribersek/statistics-service:latest
+    image: zanlah/statistics-service:latest
     ports:
       - "5002:5002"
     environment:

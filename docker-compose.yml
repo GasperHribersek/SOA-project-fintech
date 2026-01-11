@@ -75,7 +75,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
     ports:
-      - "5672:5672"   # AMQP port
+      - "5672:5672" # AMQP port
       - "15672:15672" # Management UI
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
@@ -190,7 +190,6 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Mount source code for hot reload in development
       - ./sua_ui:/app
       - /app/node_modules
       - /app/.next
