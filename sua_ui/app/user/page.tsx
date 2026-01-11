@@ -283,6 +283,13 @@ export default function UserPage() {
                         </Link>
                         <div className="flex items-center gap-4">
                             <span className="text-xl font-semibold text-foreground">Uporabniški profil</span>
+                            <Link
+                                href="/statistics"
+                                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                            >
+                                <BarChart3 className="h-4 w-4" />
+                                Statistika
+                            </Link>
                             {isAuthenticated() && (
                                 <button
                                     onClick={handleLogout}

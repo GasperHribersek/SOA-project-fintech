@@ -1,3 +1,52 @@
+# SOA Fintech Project
+
+Microservices-based fintech application with authentication, user management, logging, analytics, and API statistics tracking.
+
+## 🏗️ Architecture
+
+This project consists of multiple microservices:
+
+- **auth-service** (port 3001) - User authentication and authorization
+- **user-service** (port 3002) - User profile management
+- **log-service** (port 5003) - Centralized logging with RabbitMQ
+- **analytics_server** (port 5000) - Analytics and event tracking
+- **statistics-service** (port 5002) - **NEW!** API statistics tracking (Azure deployment ready)
+- **sua_ui** (port 3000) - Next.js frontend application
+
+---
+
+## 🆕 Statistics Service (NEW)
+
+A dedicated microservice for tracking API endpoint statistics, designed for cloud deployment on Microsoft Azure.
+
+### Features
+- ✅ Track last called endpoint
+- ✅ Track most frequently called endpoint
+- ✅ Get statistics for all endpoints (call counts)
+- ✅ POST endpoint to update statistics
+- ✅ Swagger documentation
+- ✅ MySQL database
+- ✅ Docker containerization
+- ✅ Azure deployment ready
+- ✅ Frontend dashboard page
+
+### Quick Start
+```bash
+cd statistics-service
+docker-compose up -d
+```
+
+Service: `http://localhost:5002`  
+Swagger: `http://localhost:5002/swagger`  
+Frontend: `http://localhost:3000/statistics`
+
+**📚 Complete guides:**
+- [SETUP_GUIDE.md](statistics-service/SETUP_GUIDE.md) - Complete setup instructions
+- [AZURE_DEPLOYMENT.md](statistics-service/AZURE_DEPLOYMENT.md) - Azure deployment guide
+- [QUICK_REFERENCE.md](statistics-service/QUICK_REFERENCE.md) - Quick commands reference
+
+---
+
 # AUTH SERVICE (port 3001)
 
 ## REGISTER [POST]

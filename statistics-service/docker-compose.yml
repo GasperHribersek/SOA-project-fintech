@@ -1,0 +1,37 @@
+services:
+  statistics-service:
+    image: gasperhribersek/statistics-service:latest
+    ports:
+      - "5002:5002"
+    environment:
+      - PORT=5002
+      - DB_HOST=statistics-db
+      - DB_PORT=3306
+      - DB_USER=stats_user
+      - DB_PASSWORD=stats_pass
+      - DB_NAME=statistics_db
+    depends_on:
+      - statistics-db
+    networks:
+      - statistics-network
+
+  statistics-db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=statistics_db
+      - MYSQL_USER=stats_user
+      - MYSQL_PASSWORD=stats_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - statistics-db-data:/var/lib/mysql
+    networks:
+      - statistics-network
+
+volumes:
+  statistics-db-data:
+
+networks:
+  statistics-network:
+    driver: bridge
