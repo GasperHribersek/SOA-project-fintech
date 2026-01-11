@@ -1,0 +1,236 @@
+openapi: 3.1.0
+info:
+  title: User Service API
+  version: 1.0.0
+  description: User profile and settings service
+servers:
+  - url: http://localhost:3002/api/users
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [active, inactive]
+    UserSettings:
+      type: object
+      properties:
+        language:
+          type: string
+        currency:
+          type: string
+        notificationsEnabled:
+          type: boolean
+        emailNotifications:
+          type: boolean
+        theme:
+          type: string
+        timezone:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+paths:
+  /profile:
+    post:
+      summary: Create user profile (typically called by auth-service)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfile'
+      responses:
+        '201':
+          description: Profile created
+  /{userId}/settings:
+    post:
+      summary: Create user settings
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettings'
+      responses:
+        '201':
+          description: Settings created
+    put:
+      summary: Update user settings
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettings'
+      responses:
+        '200':
+          description: Settings updated
+    delete:
+      summary: Reset user settings to defaults
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Settings reset
+  /:
+    get:
+      summary: Get all profiles
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+  /{userId}:
+    get:
+      summary: Get profile by user ID (includes settings)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+    put:
+      summary: Update profile
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated
+    delete:
+      summary: Delete profile (soft or permanent)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: permanent
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Profile deleted or deactivated
+  /{userId}/sync-credentials:
+    put:
+      summary: Sync username/email from auth-service
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Credentials synced
+security:
+  - BearerAuth: []

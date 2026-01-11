@@ -28,6 +28,30 @@
 			"name": "Auth Service",
 			"item": [
 				{
+					"name": "API Docs (Swagger UI)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{userUrl}}/docs",
+							"host": ["{{userUrl}}"],
+							"path": ["docs"]
+						}
+					}
+				},
+				{
+					"name": "API Docs (Swagger UI)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authUrl}}/docs",
+							"host": ["{{authUrl}}"],
+							"path": ["docs"]
+						}
+					}
+				},
+				{
 					"name": "Register",
 					"request": {
 						"method": "POST",

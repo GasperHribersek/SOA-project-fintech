@@ -6,6 +6,7 @@ COPY package*.json ./
 
 RUN npm install --production
 
+COPY openapi.yaml ./
 COPY src/ ./src/
 
 EXPOSE 3002

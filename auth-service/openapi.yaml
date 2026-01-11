@@ -1,0 +1,212 @@
+openapi: 3.1.0
+info:
+  title: Auth Service API
+  version: 1.0.0
+  description: Authentication service (register, login, sessions, credential management)
+servers:
+  - url: http://localhost:3001/api/auth
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        userId:
+          type: integer
+    UpdatePasswordRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+    UpdateCredentialsRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        token:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /login:
+    post:
+      summary: Login and return JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Unauthorized
+  /logout:
+    post:
+      summary: Logout (invalidate token)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logged out
+  /validate-token:
+    get:
+      summary: Validate JWT token
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token valid
+        '401':
+          description: Invalid token
+  /sessions/{userId}:
+    get:
+      summary: Get user sessions
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Session'
+    delete:
+      summary: Delete all sessions for user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deleted
+  /password/{userId}:
+    put:
+      summary: Update user password
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+      responses:
+        '200':
+          description: Password updated
+  /credentials/{userId}:
+    put:
+      summary: Update username/email in auth service (and call user-service to sync)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCredentialsRequest'
+      responses:
+        '200':
+          description: Credentials updated
+  /session/{sessionId}:
+    delete:
+      summary: Delete a single session
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Session deleted
+security:
+  - BearerAuth: []

@@ -1,22 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-// POST
+// POST - Public routes
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.post('/logout', authController.logout);
+// POST - Protected routes
+router.post('/logout', verifyToken, authController.logout);
 
-// GET
-router.get('/validate-token', authController.validateToken);
-router.get('/sessions/:userId', authController.getUserSessions);
+// GET - Protected routes
+router.get('/validate-token', verifyToken, authController.validateToken);
+router.get('/sessions/:userId', verifyToken, authController.getUserSessions);
 
-// PUT
-router.put('/password/:userId', authController.updatePassword);
-router.put('/credentials/:userId', authController.updateCredentials);
+// PUT - Protected routes
+router.put('/password/:userId', verifyToken, authController.updatePassword);
+router.put('/credentials/:userId', verifyToken, authController.updateCredentials);
 
-// DELETE
-router.delete('/sessions/:userId', authController.deleteUserSessions);
-router.delete('/session/:sessionId', authController.deleteSession);
+// DELETE - Protected routes
+router.delete('/sessions/:userId', verifyToken, authController.deleteUserSessions);
+router.delete('/session/:sessionId', verifyToken, authController.deleteSession);
 
 module.exports = router;

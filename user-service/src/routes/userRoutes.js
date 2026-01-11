@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyTokenViaService: verifyToken } = require('../middleware/authMiddleware');
 
 // POST
 // createProfile is called by auth-service, so no JWT required

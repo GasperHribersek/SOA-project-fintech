@@ -152,3 +152,29 @@ test@test.si
 # TEST JWT SECRET
 
 soa-je-kul
+
+## Swagger / OpenAPI Docs
+
+Both services expose Swagger UI for interactive API documentation once dependencies are installed and the service is running.
+
+- Auth Service: http://localhost:3001/api/auth/docs
+- User Service: http://localhost:3002/api/users/docs
+
+To enable locally (developer machine):
+
+1. Install the new dependencies in each service:
+
+```powershell
+cd auth-service; npm install
+cd ../user-service; npm install
+```
+
+2. Restart services (or rebuild Docker images):
+
+```powershell
+docker-compose up --build -d
+```
+
+Notes:
+- The Swagger UI loads the OpenAPI spec files `auth-service/openapi.yaml` and `user-service/openapi.yaml`.
+- In production, consider restricting access to these docs (they expose API surface and may aid attackers if left public).

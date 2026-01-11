@@ -32,6 +32,19 @@ swagger_template = {
     },
     "basePath": "/",
     "schemes": ["http", "https"],
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'"
+        }
+    },
+    "security": [
+        {
+            "Bearer": []
+        }
+    ],
     "tags": [
         {
             "name": "Health",
@@ -55,7 +68,7 @@ db.init_app(app)
 
 
 from models import AnalyticsEvent
-from auth_middleware import verify_token
+from auth_middleware import verify_token_via_service as verify_token
 
 #CORS za frontend
 CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
