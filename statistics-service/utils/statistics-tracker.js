@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // Statistics service URL - Update this when deployed to Azure
-const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'http://localhost:5002';
+const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'http://188.34.177.118/sua-statistics';
 
 /**
  * Track an API endpoint call to the statistics service

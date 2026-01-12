@@ -30,7 +30,7 @@ export default function StatisticsPage() {
   const [error, setError] = useState<string | null>(null);
   
   // Statistics service URL - Update this when deployed to Azure
-  const STATS_SERVICE_URL = process.env.NEXT_PUBLIC_STATS_SERVICE_URL || 'http://localhost:5002';
+  const STATS_SERVICE_URL = process.env.NEXT_PUBLIC_STATS_SERVICE_URL || 'http://188.34.177.118/sua-statistics';
 
   useEffect(() => {
     if (!isAuthenticated()) {

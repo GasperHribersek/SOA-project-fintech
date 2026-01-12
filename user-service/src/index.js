@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3002;
 const logger = getLogger('user-service');
 
 // Statistics service URL
-const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'http://localhost:5002';
+const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'http://188.34.177.118/sua-statistics';
 
 // Middleware
 app.use(cors());
