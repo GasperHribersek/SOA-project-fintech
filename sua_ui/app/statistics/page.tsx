@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BarChart3, TrendingUp, Clock, RefreshCw } from "lucide-react";
+import { ArrowLeft, BarChart3, TrendingUp, Clock, RefreshCw, Trash2 } from "lucide-react";
 import { isAuthenticated, getUser } from "@/lib/auth";
 import { toast } from "sonner";
 
@@ -39,6 +39,28 @@ export default function StatisticsPage() {
     }
     fetchStatistics();
   }, []);
+
+  const resetStatistics = async () => {
+    if (!confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${STATS_SERVICE_URL}/api/stats/reset`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Statistics reset successfully!');
+        fetchStatistics();
+      } else {
+        toast.error('Failed to reset statistics');
+      }
+    } catch (error) {
+      console.error('Error resetting statistics:', error);
+      toast.error('Failed to reset statistics');
+    }
+  };
 
   const fetchStatistics = async () => {
     try {
@@ -129,13 +151,22 @@ export default function StatisticsPage() {
               <BarChart3 className="w-6 h-6 text-blue-600" />
               <h1 className="text-xl font-bold text-gray-900">API Statistics</h1>
             </div>
-            <button
-              onClick={fetchStatistics}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={resetStatistics}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Reset
+              </button>
+              <button
+                onClick={fetchStatistics}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </nav>

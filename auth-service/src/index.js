@@ -15,8 +15,8 @@ const PORT = process.env.PORT || 3001;
 //inicializiraj logger
 const logger = getLogger('auth-service');
 
-// Statistics service URL
-const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'http://localhost:5002';
+// Statistics service URL - Railway deployment
+const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'https://selfless-perception-production.up.railway.app';
 
 // middleware
 app.use(cors());

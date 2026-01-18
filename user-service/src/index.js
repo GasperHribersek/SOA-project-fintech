@@ -15,8 +15,8 @@ const PORT = process.env.PORT || 3002;
 // Initialize logger
 const logger = getLogger('user-service');
 
-// Statistics service URL
-const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'http://188.34.177.118/sua-statistics';
+// Statistics service URL - Railway deployment
+const STATISTICS_SERVICE_URL = process.env.STATISTICS_SERVICE_URL || 'https://selfless-perception-production.up.railway.app';
 
 // Middleware
 app.use(cors());
