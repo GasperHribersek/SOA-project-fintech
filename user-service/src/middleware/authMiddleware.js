@@ -1,7 +1,17 @@
 const jwt = require('jsonwebtoken');
+const { getLogger } = require('../utils/logger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth-service:3001';
+
+// Get logger instance
+let loggerInstance = null;
+try {
+  loggerInstance = getLogger('user-service');
+  console.log('Logger initialized in authMiddleware:', typeof loggerInstance, loggerInstance ? 'OK' : 'NULL');
+} catch (error) {
+  console.error('Failed to initialize logger in authMiddleware:', error.message);
+}
 
 /**
  * Middleware to verify JWT token from Authorization header
@@ -63,8 +73,19 @@ const verifyTokenViaService = async (req, res, next) => {
     };
 
     // Propagate correlation ID if present
+    const correlationId = req.correlationId || 'no-correlation-id';
     if (req.correlationId) {
       headers['X-Correlation-Id'] = req.correlationId;
+    }
+
+    // LOG: Calling auth-service for token validation
+    if (loggerInstance && loggerInstance.info) {
+      await loggerInstance.info(
+        `${AUTH_SERVICE_URL}/api/auth/validate-token`,
+        correlationId,
+        'Calling auth-service to validate token',
+        { action: 'validate_token_request', targetService: 'auth-service' }
+      );
     }
 
     const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/validate-token`, {
@@ -74,12 +95,38 @@ const verifyTokenViaService = async (req, res, next) => {
 
     if (!response.ok) {
       const errorData = await response.json();
+      if (loggerInstance && loggerInstance.warn) {
+        await loggerInstance.warn(
+          `${AUTH_SERVICE_URL}/api/auth/validate-token`,
+          correlationId,
+          'Auth-service token validation failed',
+          { action: 'validate_token_failed', status: response.status }
+        );
+      }
       return res.status(401).json({ error: errorData.error || 'Invalid token' });
     }
 
     const data = await response.json();
     if (!data.valid) {
+      if (loggerInstance && loggerInstance.warn) {
+        await loggerInstance.warn(
+          `${AUTH_SERVICE_URL}/api/auth/validate-token`,
+          correlationId,
+          'Auth-service returned invalid token',
+          { action: 'validate_token_invalid' }
+        );
+      }
       return res.status(401).json({ error: data.error || 'Invalid token' });
+    }
+
+    // LOG: Token validated successfully
+    if (loggerInstance && loggerInstance.info) {
+      await loggerInstance.info(
+        `${AUTH_SERVICE_URL}/api/auth/validate-token`,
+        correlationId,
+        'Token validated successfully by auth-service',
+        { action: 'validate_token_success', userId: data.user?.userId }
+      );
     }
 
     // Attach user info to request

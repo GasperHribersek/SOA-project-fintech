@@ -23,6 +23,7 @@ import {
     ArrowUpCircle,
     PiggyBank,
     LogOut,
+    User,
 } from "lucide-react";
 import {
     trackPageView,
@@ -32,14 +33,37 @@ import {
     trackChartInteraction,
     trackEvent,
 } from "@/lib/analytics";
-import { authApi } from "@/lib/api";
+import { authApi, userApi } from "@/lib/api";
 import { removeToken, getUser, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/error-handler";
 import { toast } from "sonner";
 
+interface UserProfile {
+    user_id: number;
+    username?: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    address?: string;
+    date_of_birth?: string;
+    settings?: any;
+}
+
 export default function UserPage() {
     const router = useRouter();
     const [authenticatedUser, setAuthenticatedUser] = useState<{ id: number; username: string; email: string; name?: string } | null>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [loadingProfile, setLoadingProfile] = useState(false);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [userBalance, setUserBalance] = useState<number>(0);
+    const [loadingBalance, setLoadingBalance] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        address: "",
+    });
 
     // Demo uporabniški podatki (fallback)
     const demoUser = {
@@ -56,13 +80,26 @@ export default function UserPage() {
         avatar: "https://placehold.co/200x200/4F46E5/FFFFFF?text=JN",
     };
 
-    // Merge authenticated user with demo user data for display
+    // Merge authenticated user with demo user data and user profile from user-service
     const user = authenticatedUser
-        ? { ...demoUser, ...authenticatedUser, name: authenticatedUser.name || authenticatedUser.username || authenticatedUser.email }
+        ? {
+            ...demoUser,
+            ...authenticatedUser,
+            ...(userProfile ? {
+                name: userProfile.first_name && userProfile.last_name
+                    ? `${userProfile.first_name} ${userProfile.last_name}`
+                    : authenticatedUser.name || authenticatedUser.username || authenticatedUser.email,
+                phone: userProfile.phone || demoUser.phone,
+                location: userProfile.address || demoUser.location,
+            } : {}),
+            name: userProfile && userProfile.first_name && userProfile.last_name
+                ? `${userProfile.first_name} ${userProfile.last_name}`
+                : authenticatedUser.name || authenticatedUser.username || authenticatedUser.email
+        }
         : demoUser;
 
     const stats = [
-        { label: "Skupno stanje", value: "12.450,00", suffix: "€", icon: Wallet, color: "text-primary" },
+        { label: "Skupno stanje", value: userBalance.toLocaleString('sl-SI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), suffix: "€", icon: Wallet, color: "text-primary" },
         { label: "Mesečni prihodki", value: "3.200,00", suffix: "€", icon: ArrowDownCircle, color: "text-emerald-500" },
         { label: "Mesečni stroški", value: "1.470,00", suffix: "€", icon: ArrowUpCircle, color: "text-rose-500" },
         { label: "Prihranki", value: "8.750,00", suffix: "€", icon: PiggyBank, color: "text-sky-500" },
@@ -119,12 +156,15 @@ export default function UserPage() {
 
     // Check authentication and load user data
     useEffect(() => {
-        const checkAuth = () => {
+        const checkAuth = async () => {
             if (isAuthenticated()) {
                 const storedUser = getUser();
                 if (storedUser) {
                     setAuthenticatedUser(storedUser);
                     trackPageView('/user', storedUser.id);
+                    // Load user profile from user-service
+                    await loadUserProfile(storedUser.id);
+                    await loadUserBalance(storedUser.id);
                 } else {
                     trackPageView('/user', demoUser.id);
                 }
@@ -133,7 +173,104 @@ export default function UserPage() {
             }
         };
         checkAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Load user profile from user-service
+    const loadUserProfile = async (userId: number) => {
+        try {
+            setLoadingProfile(true);
+            const profile = await userApi.getProfile(userId) as UserProfile;
+            setUserProfile(profile);
+            // Update edit form data if profile exists
+            if (profile) {
+                setEditFormData({
+                    firstName: profile.first_name || "",
+                    lastName: profile.last_name || "",
+                    phone: profile.phone || "",
+                    address: profile.address || "",
+                });
+            }
+        } catch (error) {
+            // Silently fail - user profile might not exist yet
+            console.log("Could not load user profile:", error);
+            setUserProfile(null);
+        } finally {
+            setLoadingProfile(false);
+        }
+    };
+
+    const loadUserBalance = async (userId: number) => {
+        try {
+            setLoadingBalance(true);
+            const response = await userApi.getBalance(userId) as { balance: number };
+            setUserBalance(response.balance || 0);
+            trackEvent("balance_viewed", { userId, balance: response.balance });
+        } catch (error) {
+            console.error("Failed to load user balance:", error);
+            // Don't show error toast, just use default 0
+            setUserBalance(0);
+        } finally {
+            setLoadingBalance(false);
+        }
+    };
+
+    // Handle profile update
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!authenticatedUser) return;
+
+        try {
+            setLoadingProfile(true);
+
+            // If profile doesn't exist, create it first
+            if (!userProfile) {
+                await userApi.createProfile({
+                    firstName: editFormData.firstName,
+                    lastName: editFormData.lastName,
+                    phone: editFormData.phone,
+                    address: editFormData.address,
+                });
+
+                // Track profile creation event
+                trackEvent("profile_created", {
+                    userId: authenticatedUser.id,
+                    metadata: {
+                        fields: Object.keys(editFormData).filter(
+                            key => editFormData[key as keyof typeof editFormData]
+                        ),
+                    },
+                });
+            } else {
+                await userApi.updateProfile(authenticatedUser.id, {
+                    firstName: editFormData.firstName,
+                    lastName: editFormData.lastName,
+                    phone: editFormData.phone,
+                    address: editFormData.address,
+                });
+
+                // Track profile update event
+                trackEvent("profile_updated", {
+                    userId: authenticatedUser.id,
+                    metadata: {
+                        fields_updated: Object.keys(editFormData).filter(
+                            key => editFormData[key as keyof typeof editFormData]
+                        ),
+                    },
+                });
+            }
+
+            // Reload profile
+            await loadUserProfile(authenticatedUser.id);
+            setIsEditingProfile(false);
+            toast.success(userProfile ? "Profil uspešno posodobljen" : "Profil uspešno ustvarjen");
+        } catch (error) {
+            handleApiError(error);
+            toast.error("Napaka pri shranjevanju profila");
+        } finally {
+            setLoadingProfile(false);
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -160,12 +297,22 @@ export default function UserPage() {
         trackPaymentInitiated(amount, 'EUR', user.id);
 
         // Simulate payment processing
-        setTimeout(() => {
+        setTimeout(async () => {
             setIsProcessing(false);
             setPaymentSuccess(true);
 
             // Track payment completed
             trackPaymentCompleted(amount, transactionId, 'EUR', user.id);
+
+            // Update balance in user-service (subtract amount)
+            if (authenticatedUser) {
+                try {
+                    await userApi.updateBalance(authenticatedUser.id, amount, 'subtract');
+                    await loadUserBalance(authenticatedUser.id);
+                } catch (error) {
+                    console.error('Failed to update balance:', error);
+                }
+            }
 
             setTimeout(() => {
                 setPaymentSuccess(false);
@@ -194,9 +341,19 @@ export default function UserPage() {
             },
         });
 
-        setTimeout(() => {
+        setTimeout(async () => {
             setIsProcessing(false);
             setPaymentSuccess(true);
+
+            // Update balance in user-service (add amount - simulating received payment)
+            if (authenticatedUser) {
+                try {
+                    await userApi.updateBalance(authenticatedUser.id, amount, 'add');
+                    await loadUserBalance(authenticatedUser.id);
+                } catch (error) {
+                    console.error('Failed to update balance:', error);
+                }
+            }
 
             setTimeout(() => {
                 setPaymentSuccess(false);
@@ -223,9 +380,19 @@ export default function UserPage() {
             },
         });
 
-        setTimeout(() => {
+        setTimeout(async () => {
             setIsProcessing(false);
             setPaymentSuccess(true);
+
+            // Update balance in user-service (subtract investment amount)
+            if (authenticatedUser) {
+                try {
+                    await userApi.updateBalance(authenticatedUser.id, amount, 'subtract');
+                    await loadUserBalance(authenticatedUser.id);
+                } catch (error) {
+                    console.error('Failed to update balance:', error);
+                }
+            }
 
             setTimeout(() => {
                 setPaymentSuccess(false);
@@ -284,12 +451,13 @@ export default function UserPage() {
                         <div className="flex items-center gap-4">
                             <span className="text-xl font-semibold text-foreground">Uporabniški profil</span>
                             <Link
-                                href="/statistics"
+                                href="/analytics"
                                 className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                             >
                                 <BarChart3 className="h-4 w-4" />
-                                Statistika
+                                Moji dogodki
                             </Link>
+
                             {isAuthenticated() && (
                                 <button
                                     onClick={handleLogout}
@@ -317,14 +485,14 @@ export default function UserPage() {
                                         Na voljo
                                     </p>
                                     <p className="mt-2 text-3xl font-semibold sm:text-4xl">
-                                        12.450,00 €
+                                        {loadingBalance ? '...' : userBalance.toLocaleString('sl-SI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                                     </p>
                                     <p className="mt-1 text-xs sm:text-sm opacity-80">
                                         Osebni račun · EUR
                                     </p>
                                 </div>
                                 <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full border border-white/30 bg-white/20 flex items-center justify-center text-white font-semibold text-lg sm:text-xl">
-                                    {authenticatedUser ? (authenticatedUser.name || authenticatedUser.username || authenticatedUser.email).charAt(0).toUpperCase() : 'JN'}
+                                    {user.name.charAt(0).toUpperCase()}
                                 </div>
                             </div>
                             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -389,7 +557,7 @@ export default function UserPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-medium text-card-foreground">
-                                            {authenticatedUser ? (authenticatedUser.name || authenticatedUser.username || authenticatedUser.email) : user.name}
+                                            {user.name}
                                         </p>
                                         <p className="text-xs">
                                             {authenticatedUser ? authenticatedUser.email : `Član od ${user.joinDate}`}
@@ -580,6 +748,191 @@ export default function UserPage() {
                             </button>
                         </div>
                     </div>
+
+                    {/* User Profile Section */}
+                    {isAuthenticated() && authenticatedUser && (
+                        <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-sm backdrop-blur">
+                            <div className="mb-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <User className="h-5 w-5 text-primary" />
+                                    <h2 className="text-lg font-semibold text-card-foreground">
+                                        Moj profil
+                                    </h2>
+                                </div>
+                                {!isEditingProfile && (
+                                    <button
+                                        onClick={() => setIsEditingProfile(true)}
+                                        className="rounded-lg border border-primary/40 bg-background px-4 py-2 text-sm font-semibold text-primary shadow-sm transition-all hover:bg-primary/5"
+                                    >
+                                        Uredi profil
+                                    </button>
+                                )}
+                            </div>
+
+                            {isEditingProfile ? (
+                                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label
+                                                htmlFor="firstName"
+                                                className="mb-2 block text-sm font-medium text-card-foreground"
+                                            >
+                                                Ime
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="firstName"
+                                                value={editFormData.firstName}
+                                                onChange={(e) =>
+                                                    setEditFormData({
+                                                        ...editFormData,
+                                                        firstName: e.target.value,
+                                                    })
+                                                }
+                                                className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                placeholder="Janez"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label
+                                                htmlFor="lastName"
+                                                className="mb-2 block text-sm font-medium text-card-foreground"
+                                            >
+                                                Priimek
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="lastName"
+                                                value={editFormData.lastName}
+                                                onChange={(e) =>
+                                                    setEditFormData({
+                                                        ...editFormData,
+                                                        lastName: e.target.value,
+                                                    })
+                                                }
+                                                className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                placeholder="Novak"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label
+                                            htmlFor="phone"
+                                            className="mb-2 block text-sm font-medium text-card-foreground"
+                                        >
+                                            Telefon
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="phone"
+                                            value={editFormData.phone}
+                                            onChange={(e) =>
+                                                setEditFormData({
+                                                    ...editFormData,
+                                                    phone: e.target.value,
+                                                })
+                                            }
+                                            className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            placeholder="+386 1 234 5678"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label
+                                            htmlFor="address"
+                                            className="mb-2 block text-sm font-medium text-card-foreground"
+                                        >
+                                            Naslov
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="address"
+                                            value={editFormData.address}
+                                            onChange={(e) =>
+                                                setEditFormData({
+                                                    ...editFormData,
+                                                    address: e.target.value,
+                                                })
+                                            }
+                                            className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            placeholder="Ljubljana, Slovenija"
+                                        />
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="submit"
+                                            disabled={loadingProfile}
+                                            className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {loadingProfile ? "Shranjevanje..." : "Shrani spremembe"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsEditingProfile(false);
+                                                // Reset form data
+                                                if (userProfile) {
+                                                    setEditFormData({
+                                                        firstName: userProfile.first_name || "",
+                                                        lastName: userProfile.last_name || "",
+                                                        phone: userProfile.phone || "",
+                                                        address: userProfile.address || "",
+                                                    });
+                                                }
+                                            }}
+                                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold text-card-foreground shadow-sm transition-all hover:bg-accent"
+                                        >
+                                            Prekliči
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                                        <span className="text-muted-foreground">Ime in priimek</span>
+                                        <span className="font-medium text-card-foreground">
+                                            {user.name}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                                        <span className="text-muted-foreground">Email</span>
+                                        <span className="font-medium text-card-foreground">
+                                            {authenticatedUser.email}
+                                        </span>
+                                    </div>
+                                    {userProfile && (
+                                        <>
+                                            {userProfile.phone && (
+                                                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                                                    <span className="text-muted-foreground">Telefon</span>
+                                                    <span className="font-medium text-card-foreground">
+                                                        {userProfile.phone}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {userProfile.address && (
+                                                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                                                    <span className="text-muted-foreground">Naslov</span>
+                                                    <span className="font-medium text-card-foreground">
+                                                        {userProfile.address}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                    {loadingProfile && (
+                                        <div className="text-center text-xs text-muted-foreground">
+                                            Nalaganje profila...
+                                        </div>
+                                    )}
+                                    {!userProfile && !loadingProfile && (
+                                        <div className="text-center text-xs text-muted-foreground">
+                                            Profil še ni nastavljen. Kliknite "Uredi profil" za nastavitev.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Payment Modal */}
                     {isPaymentModalOpen && (
@@ -898,14 +1251,7 @@ export default function UserPage() {
                         </div>
                     )}
 
-                    {/* Opomba o predstavitvi */}
-                    <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                        <p className="text-sm text-muted-foreground">
-                            <strong className="font-semibold text-foreground">Opomba:</strong> To je predstavitvena
-                            uporabniška profilna stran. V pravi aplikaciji bi se uporabniški podatki pridobili iz vaše
-                            zaledne storitve.
-                        </p>
-                    </div>
+
                 </div>
             </main>
         </div>
