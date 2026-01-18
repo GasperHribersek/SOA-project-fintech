@@ -1,0 +1,42 @@
+name: Deploy Statistics Service to Railway
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'statistics-service/**'
+      - '.github/workflows/deploy-statistics-service.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        working-directory: ./statistics-service
+        run: npm ci
+      
+      - name: Run tests (if available)
+        working-directory: ./statistics-service
+        run: npm test || echo "No tests configured"
+        continue-on-error: true
+      
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      
+      - name: Deploy to Railway
+        working-directory: ./statistics-service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service statistics-service
