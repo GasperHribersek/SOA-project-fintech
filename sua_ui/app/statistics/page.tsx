@@ -29,8 +29,8 @@ export default function StatisticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Statistics service URL - Update this when deployed to Azure
-  const STATS_SERVICE_URL = process.env.NEXT_PUBLIC_STATS_SERVICE_URL || 'http://188.34.177.118/sua-statistics';
+  // Statistics service URL - Deployed on Railway
+  const STATS_SERVICE_URL = process.env.NEXT_PUBLIC_STATS_SERVICE_URL || 'https://selfless-perception-production.up.railway.app';
 
   useEffect(() => {
     if (!isAuthenticated()) {
