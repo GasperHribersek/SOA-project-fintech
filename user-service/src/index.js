@@ -29,7 +29,7 @@ app.use((req, res, next) => {
   res.on('finish', () => {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       axios.post(`${STATISTICS_SERVICE_URL}/api/stats/update`, { 
-        klicanaStoritev: req.path 
+        klicanaStoritev: `user-service: ${req.method} ${req.path}` 
       }, { timeout: 3000 })
       .catch(err => console.error('Failed to track endpoint:', err.message));
     }

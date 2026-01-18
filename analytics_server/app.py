@@ -5,6 +5,7 @@ from datetime import datetime
 from models import db
 import os
 import time
+import requests
 
 app = Flask(__name__)
 
@@ -64,6 +65,8 @@ DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://analytics_user:analytics_
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Statistics service URL - Railway deployment
+STATISTICS_SERVICE_URL = os.getenv('STATISTICS_SERVICE_URL', 'https://selfless-perception-production.up.railway.app')
 
 db.init_app(app)
 
@@ -79,11 +82,23 @@ CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
 logger = get_logger('analytics-server')
 logging_middleware = create_logging_middleware(logger)
 
+# Statistics tracking middleware
+def track_statistics():
+    try:
+        endpoint = f"analytics-service: {request.method} {request.path}"
+        requests.post(f'{STATISTICS_SERVICE_URL}/api/stats/update', 
+                     json={'klicanaStoritev': endpoint}, 
+                     timeout=2)
+    except Exception as e:
+        logger.error(f'Statistics tracking failed: {str(e)}')
+
 # Add logging middleware
 @app.before_request
 def before_request():
     g.start_time = time.time()
     g.correlation_id = logging_middleware()
+    # Track statistics for all requests
+    track_statistics()
 
 @app.after_request
 def after_request(response):

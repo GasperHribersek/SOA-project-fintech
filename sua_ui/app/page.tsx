@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { User, ArrowRight, Sparkles, LogOut } from "lucide-react";
+import { User, ArrowRight, Sparkles, LogOut, BarChart3 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { isAuthenticated, getUser, removeToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
@@ -47,6 +47,13 @@ export default function Home() {
                   <span className="text-sm text-muted-foreground">
                     {user?.username || user?.email}
                   </span>
+                  <Link
+                    href="/statistics"
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    Statistika
+                  </Link>
                   <Link
                     href="/user"
                     className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -130,7 +137,7 @@ export default function Home() {
                 Obsežni uporabniški profili in funkcije upravljanja za vaše aplikacijske potrebe.
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md sm:col-span-2 lg:col-span-1">
+            <div className="rounded-lg border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                 <ArrowRight className="h-6 w-6 text-primary" />
               </div>
@@ -139,6 +146,17 @@ export default function Home() {
               </h3>
               <p className="text-sm text-muted-foreground">
                 Storitveno usmerjena arhitektura, ki se prilagaja vašim poslovnim potrebam.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md sm:col-span-2 lg:col-span-1">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-card-foreground">
+                API Statistika
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Spremljajte klice API-jev v realnem času z našo Railway-nameščeno statistično storitvijo.
               </p>
             </div>
           </div>
