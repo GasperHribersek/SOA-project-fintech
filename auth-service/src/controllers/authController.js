@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const { getPool } = require('../config/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -26,13 +27,25 @@ exports.register = async (req, res) => {
 
     // Obveščaj user-service, da ustvari profile uporabnika
     try {
-      await fetch(`${USER_SERVICE_URL}/api/users/profile`, {
-        method: 'POST',
+      const response = await axios.post(`${USER_SERVICE_URL}/api/users/profile`, {
+        userId,
+        username,
+        email
+      }, {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, username, email })
+        timeout: 5000 // 5 second timeout
       });
+
+      if (response.status === 201) {
+        console.log(`User profile created successfully for user ${userId}`);
+      }
     } catch (err) {
-      console.log('User service notification failed (may not be running):', err.message);
+      // Log error but don't fail registration if user-service is unavailable
+      console.error('User service notification failed (may not be running):', err.message);
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+      }
     }
 
     res.status(201).json({
@@ -145,7 +158,7 @@ exports.validateToken = async (req, res) => {
       return res.status(401).json({ valid: false, error: 'Session expired or invalid' });
     }
 
-    res.json({
+    const userInfo = {
       valid: true,
       user: {
         userId: decoded.sub || decoded.userId,
@@ -154,7 +167,9 @@ exports.validateToken = async (req, res) => {
         email: decoded.email,
         username: decoded.name || decoded.username
       }
-    });
+    };
+
+    res.json(userInfo);
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ valid: false, error: 'Token expired' });
@@ -254,13 +269,24 @@ exports.updateCredentials = async (req, res) => {
 
     // Notify user-service about credential update
     try {
-      await fetch(`${USER_SERVICE_URL}/api/users/${userId}/sync-credentials`, {
-        method: 'PUT',
+      const response = await axios.put(`${USER_SERVICE_URL}/api/users/${userId}/sync-credentials`, {
+        username,
+        email
+      }, {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email })
+        timeout: 5000 // 5 second timeout
       });
+
+      if (response.status === 200) {
+        console.log(`User credentials synced successfully for user ${userId}`);
+      }
     } catch (err) {
-      console.log('User service sync failed:', err.message);
+      // Log error but don't fail update if user-service is unavailable
+      console.error('User service sync failed:', err.message);
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+      }
     }
 
     res.json({ message: 'Credentials updated successfully' });

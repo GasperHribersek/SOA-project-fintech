@@ -59,6 +59,18 @@ def verify_token_via_service(f):
         token = auth_header.split(' ')[1]
         
         try:
+            from logger import get_logger
+            logger = get_logger('analytics-server')
+            correlation_id = request.headers.get('X-Correlation-Id', 'no-correlation-id')
+            
+            # LOG: Calling auth-service for token validation
+            logger.info(
+                f'{AUTH_SERVICE_URL}/api/auth/validate-token',
+                correlation_id,
+                'Calling auth-service to validate token',
+                {'action': 'validate_token_request', 'targetService': 'auth-service'}
+            )
+            
             # Call auth-service to verify token
             response = requests.get(
                 f'{AUTH_SERVICE_URL}/api/auth/validate-token',
@@ -68,11 +80,31 @@ def verify_token_via_service(f):
             
             if response.status_code != 200:
                 error_data = response.json() if response.content else {}
+                logger.warn(
+                    f'{AUTH_SERVICE_URL}/api/auth/validate-token',
+                    correlation_id,
+                    'Auth-service token validation failed',
+                    {'action': 'validate_token_failed', 'status': response.status_code}
+                )
                 return jsonify({'error': error_data.get('error', 'Invalid token')}), 401
             
             data = response.json()
             if not data.get('valid'):
+                logger.warn(
+                    f'{AUTH_SERVICE_URL}/api/auth/validate-token',
+                    correlation_id,
+                    'Auth-service returned invalid token',
+                    {'action': 'validate_token_invalid'}
+                )
                 return jsonify({'error': data.get('error', 'Invalid token')}), 401
+            
+            # LOG: Token validated successfully
+            logger.info(
+                f'{AUTH_SERVICE_URL}/api/auth/validate-token',
+                correlation_id,
+                'Token validated successfully by auth-service',
+                {'action': 'validate_token_success', 'userId': data.get('user', {}).get('userId')}
+            )
             
             # Attach user info to request
             request.user = data.get('user', {})

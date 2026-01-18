@@ -1,7 +1,36 @@
+"use client";
+
 import Link from "next/link";
-import { User, ArrowRight, Sparkles } from "lucide-react";
+import { User, ArrowRight, Sparkles, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { isAuthenticated, getUser, removeToken } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const [authenticated, setAuthenticated] = useState(false);
+  const [user, setUser] = useState<{ username?: string; email?: string } | null>(null);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      if (isAuthenticated()) {
+        setAuthenticated(true);
+        setUser(getUser());
+      } else {
+        setAuthenticated(false);
+        setUser(null);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    removeToken();
+    setAuthenticated(false);
+    setUser(null);
+    router.push("/login");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -13,19 +42,43 @@ export default function Home() {
               <span className="text-xl font-semibold text-foreground">SOA Aplikacija</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link
-                href="/login"
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
-                Prijava
-              </Link>
-              <Link
-                href="/user"
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
-                <User className="h-4 w-4" />
-                Uporabniška predstavitev
-              </Link>
+              {authenticated ? (
+                <>
+                  <span className="text-sm text-muted-foreground">
+                    {user?.username || user?.email}
+                  </span>
+                  <Link
+                    href="/user"
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <User className="h-4 w-4" />
+                    Moj profil
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Odjava
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Prijava
+                  </Link>
+                  <Link
+                    href="/user"
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <User className="h-4 w-4" />
+                    Uporabniška predstavitev
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

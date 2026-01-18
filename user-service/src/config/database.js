@@ -23,16 +23,16 @@ const initializeDatabase = async () => {
   // First connect without database to create it if needed
   const initConfig = { ...dbConfig };
   delete initConfig.database;
-  
+
   const initPool = mysql.createPool(initConfig);
-  
+
   try {
     await initPool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME || 'user_db'}`);
     await initPool.end();
-    
+
     // Now connect to the database and create tables
     const pool = getPool();
-    
+
     // User profiles table - stores ONLY profile information (NOT auth data)
     // user_id references the ID from auth-service
     await pool.query(`
@@ -46,12 +46,41 @@ const initializeDatabase = async () => {
         phone VARCHAR(50),
         address VARCHAR(500),
         date_of_birth DATE,
+        balance DECIMAL(15,2) DEFAULT 0.00,
         status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
-    
+
+    // Add balance column if it doesn't exist (for existing tables)
+    try {
+      // Check if balance column exists
+      const [columns] = await pool.query(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = ? 
+        AND TABLE_NAME = 'user_profiles' 
+        AND COLUMN_NAME = 'balance'
+      `, [process.env.DB_NAME || 'user_db']);
+
+      console.log(`Checking for balance column: found ${columns.length} results`);
+
+      if (columns.length === 0) {
+        // Column doesn't exist, add it
+        console.log('Adding balance column to user_profiles table...');
+        await pool.query(`
+          ALTER TABLE user_profiles 
+          ADD COLUMN balance DECIMAL(15,2) DEFAULT 1000.00 AFTER date_of_birth
+        `);
+        console.log('✓ Balance column added successfully');
+      } else {
+        console.log('✓ Balance column already exists');
+      }
+    } catch (error) {
+      console.error('✗ Error adding balance column:', error);
+    }
+
     // User settings table - stores user preferences
     await pool.query(`
       CREATE TABLE IF NOT EXISTS user_settings (
@@ -68,7 +97,7 @@ const initializeDatabase = async () => {
         FOREIGN KEY (user_id) REFERENCES user_profiles(user_id) ON DELETE CASCADE
       )
     `);
-    
+
     console.log('User database initialized successfully');
   } catch (error) {
     console.error('Database initialization error:', error);

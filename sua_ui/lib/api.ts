@@ -208,6 +208,22 @@ export const userApi = {
   },
 
   /**
+   * Create user profile (for users who registered before profile creation was added)
+   */
+  async createProfile(data: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    address?: string;
+    dateOfBirth?: string;
+  }) {
+    return apiRequest(`${USER_SERVICE_URL}/api/users/profile/create`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
    * Update user profile
    */
   async updateProfile(userId: number, data: any) {
@@ -223,6 +239,19 @@ export const userApi = {
   async getAllProfiles() {
     return apiRequest(`${USER_SERVICE_URL}/api/users`, {
       method: "GET",
+    });
+  },
+
+  async getBalance(userId: number) {
+    return apiRequest(`${USER_SERVICE_URL}/api/users/${userId}/balance`, {
+      method: "GET",
+    });
+  },
+
+  async updateBalance(userId: number, amount: number, operation: 'set' | 'add' | 'subtract') {
+    return apiRequest(`${USER_SERVICE_URL}/api/users/${userId}/balance`, {
+      method: "PUT",
+      body: JSON.stringify({ amount, operation }),
     });
   },
 };
