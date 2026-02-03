@@ -41,7 +41,7 @@ export default function StatisticsPage() {
   }, []);
 
   const resetStatistics = async () => {
-    if (!confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
+    if (!confirm('Ali ste prepričani, da želite ponastaviti vse statistike? To dejanja ni mogoče razveljaviti.')) {
       return;
     }
 
@@ -51,14 +51,14 @@ export default function StatisticsPage() {
       });
 
       if (response.ok) {
-        toast.success('Statistics reset successfully!');
+        toast.success('Statistike so bile uspešno ponastavljene!');
         fetchStatistics();
       } else {
-        toast.error('Failed to reset statistics');
+        toast.error('Neuspešna ponastavljanje statistik');
       }
     } catch (error) {
       console.error('Error resetting statistics:', error);
-      toast.error('Failed to reset statistics');
+      toast.error('Neuspešna ponastavljanje statistik');
     }
   };
 
@@ -91,9 +91,9 @@ export default function StatisticsPage() {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching statistics:', err);
-      setError('Failed to load statistics');
+      setError('Neuspešno nalaganje statistik');
       setLoading(false);
-      toast.error('Failed to load statistics');
+      toast.error('Neuspešno nalaganje statistik');
     }
   };
 
@@ -128,7 +128,7 @@ export default function StatisticsPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading statistics...</p>
+          <p className="text-gray-600">Nalaganje statistik...</p>
         </div>
       </div>
     );
@@ -145,11 +145,11 @@ export default function StatisticsPage() {
               className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Dashboard</span>
+              <span className="font-medium">Nazaj na nadzorno ploščo</span>
             </Link>
             <div className="flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900">API Statistics</h1>
+              <h1 className="text-xl font-bold text-gray-900">Statistika API klicev</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -157,14 +157,14 @@ export default function StatisticsPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                Reset
+                Ponastavi
               </button>
               <button
                 onClick={fetchStatistics}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
-                Refresh
+                Osveži
               </button>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function StatisticsPage() {
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Last Called</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Zadnji klic</h2>
             </div>
             {lastCalled ? (
               <div>
@@ -198,11 +198,11 @@ export default function StatisticsPage() {
                   {formatDate(lastCalled.last_called)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Total calls: {lastCalled.call_count}
+                  Skupno klicev: {lastCalled.call_count}
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500">No data available</p>
+              <p className="text-gray-500">Podatki niso dostopni</p>
             )}
           </div>
 
@@ -212,7 +212,7 @@ export default function StatisticsPage() {
               <div className="p-3 bg-green-100 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Most Frequent</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Najpogostejši</h2>
             </div>
             {mostFrequent ? (
               <div>
@@ -220,14 +220,14 @@ export default function StatisticsPage() {
                   {mostFrequent.endpoint}
                 </p>
                 <p className="text-2xl font-bold text-green-600 mb-1">
-                  {mostFrequent.call_count} calls
+                  {mostFrequent.call_count} klicev
                 </p>
                 <p className="text-xs text-gray-500">
-                  Last: {formatDate(mostFrequent.last_called)}
+                  Zadnji: {formatDate(mostFrequent.last_called)}
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500">No data available</p>
+              <p className="text-gray-500">Podatki niso dostopni</p>
             )}
           </div>
 
@@ -237,7 +237,7 @@ export default function StatisticsPage() {
               <div className="p-3 bg-purple-100 rounded-lg">
                 <BarChart3 className="w-6 h-6 text-purple-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Overview</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Pregled</h2>
             </div>
             {statistics ? (
               <div>
@@ -245,17 +245,17 @@ export default function StatisticsPage() {
                   <p className="text-2xl font-bold text-purple-600">
                     {statistics.total_calls}
                   </p>
-                  <p className="text-xs text-gray-500">Total API Calls</p>
+                  <p className="text-xs text-gray-500">Skupno klicev API-ja</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-700">
                     {statistics.total_endpoints}
                   </p>
-                  <p className="text-xs text-gray-500">Unique Endpoints</p>
+                  <p className="text-xs text-gray-500">Edinstvenimi koncnimi točkami</p>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500">No data available</p>
+              <p className="text-gray-500">Podatki niso dostopni</p>
             )}
           </div>
         </div>
@@ -264,10 +264,10 @@ export default function StatisticsPage() {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
           <div className="p-6 border-b border-gray-100">
             <h2 className="text-xl font-bold text-gray-900">
-              Endpoint Call Statistics
+              Statistika klicev koncnih točk
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Detailed breakdown of API calls per endpoint
+              Podrobna razdelitev klicev API-ja po koncnih točkah
             </p>
           </div>
 
@@ -277,22 +277,22 @@ export default function StatisticsPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rank
+                      Uvrstitev
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Endpoint
+                      Koncna točka
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Call Count
+                      Število klicev
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Percentage
+                      Odstotek
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Last Called
+                      Zadnji klic
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      First Called
+                      Prvi klic
                     </th>
                   </tr>
                 </thead>
@@ -351,9 +351,9 @@ export default function StatisticsPage() {
           ) : (
             <div className="p-12 text-center">
               <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No statistics available yet</p>
+              <p className="text-gray-500">Statistike še niso dostopne</p>
               <p className="text-sm text-gray-400 mt-2">
-                Statistics will appear here once your APIs start receiving calls
+                Statistike se bodo pojavile tukaj, ko bodo vaši API-ji začeli prejemati klice
               </p>
             </div>
           )}
