@@ -1,0 +1,34 @@
+Zagotavljanje varnosti je zelo pomembno pri komunikaciji na spletu. 
+
+Za to nalogo imate na voljo 2 možnosti kako jo opraviti (izberite si eno):
+
+Možnost A
+
+Za zagotavljanje istovetnosti omogočite rabo JWT žetonov na vaših storitvah. Poskrbite, da žeton JWT v Payload delu vsebuje vsaj atribute:
+
+    sub
+    name
+    iat
+    exp 
+
+Storitev namenjena prijavi naj uporabniku ob prijavi pošlje JWT žeton, ki ga dodaja (Authorization bearer <token>) v zaglavju svojih zahtevkov (HTTP Header). Storitve nato zraven zahtevkov prejemajo žetone, ki jih preverjajo ali so veljavni in za katerega uporabnika gre.  Verifikacijo lahko opravljajo storitve same (če si delijo skrivnost (secret)) ali pa se jim pripravi storitev za verifikacijo na storitvi, ki zagotavlja prijavo. JWTji naj bodo omogočeni na vseh storitvah. Na odjemalcu poskrbite za pravilno in posodobljeno komunikacijo s storitvami. Na odjemalcu omogočite tudi lovljenje izjem, ki jih prejmete v primeru, da uporabnik pošlje neveljaven ali potečeen JWT žeton, te se naj izpišejo v obliki toast (https://www.cssscript.com/best-toast-notification-libraries/) sporočil.
+
+Možnost B
+
+Izberite si SSO znanega ponudnike (npr. https://auth0.com/, https://www.okta.com/) in omogočite avtorizacijo in verifikacijo vaših storitev s klici na zagotovljene storitve. Podprite tudi "refresh token" metodo. Na odjemalcu poskrbite za pravilno in posodobljeno komunikacijo s storitvami. Na odjemalcu omogočite tudi lovljenje izjem, ki jih prejmete v primeru, da uporabnik pošlje neveljaven ali potečeen žeton, te se naj izpišejo v obliki toast (npr. https://www.cssscript.com/best-toast-notification-libraries/) sporočil. 
+
+Pošiljanje žetonov pri možnosti ni zapovedano v naprej pač pa naj skupina sledi praksam, ki jih narekuje izbran SSO ponudnik!
+
+Rok za dokončanje naloge:
+
+    dva tedna po predstavitvi
+
+Povezave:
+
+    JWT vodič za .NET CORE in Node.JS
+    JWT debugger
+    JWT in Express
+    JWT in Ktor
+    JWT in Spring Boot
+
+	

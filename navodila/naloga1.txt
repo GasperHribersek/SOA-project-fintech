@@ -1,0 +1,16 @@
+1. razporedite se v skupine (3-4) (25_Projekt_PrijavaSkupine.xlsx)​
+Skupino oblikujte znotraj izbranega modula in skupine (RVx)!​​
+ 
+
+2. znotraj skupine oblikujte in opredelite idejno zasnovo vaše mikrostoritve. Vsak član skupine naj izdela vsaj 2 mikrostoritvi, oz tisti, ki razvija Frontend API, vsaj 1.​​
+
+3. po vzoru predstavljenih shematičnih zasnov mikrostoritev (slajdi 4 - 6) izdelajte shemo za svojo idejo. Zapišite katero storitev bo kdo razvijal, kaj bo počela, katere klice bo omogočala.
+
+Opravljanje vaj v primeru manjšega števila članov skupine:
+
+    1 član - član naj izdela vsaj 4 mikrostoritve in Frontend, poleg tega pa zadosti zahtevam vseh preostalih nalog.
+
+    2 člana - član skupine naj izdela vsaj 3 mikrostoritve in Frontend, poleg tega pa zadosti zahtevam vseh preostalih nalog.
+    3 člani / 4 člani -  član skupine naj izdela vsaj 2 mikrostoritvi, oz tisti, ki razvija Frontend, vsaj 1.
+
+Oddaja

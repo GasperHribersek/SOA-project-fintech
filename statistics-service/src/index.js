@@ -59,21 +59,18 @@ const startServer = async (retries = 5, delay = 3000) => {
       await db.query('SELECT 1');
       console.log('✅ Database connected successfully');
 
-      // Create table if not exists
-      const createTableQuery = `
+      // Create table if not exists (PostgreSQL)
+      await db.query(`
         CREATE TABLE IF NOT EXISTS api_call_statistics (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id SERIAL PRIMARY KEY,
           endpoint VARCHAR(500) NOT NULL UNIQUE,
           call_count INT DEFAULT 0 NOT NULL,
-          last_called DATETIME NOT NULL,
-          first_called DATETIME NOT NULL,
-          INDEX idx_endpoint (endpoint),
-          INDEX idx_last_called (last_called),
-          INDEX idx_call_count (call_count)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-      `;
-      
-      await db.query(createTableQuery);
+          last_called TIMESTAMP NOT NULL,
+          first_called TIMESTAMP NOT NULL
+        );
+      `);
+      await db.query(`CREATE INDEX IF NOT EXISTS idx_last_called ON api_call_statistics (last_called);`);
+      await db.query(`CREATE INDEX IF NOT EXISTS idx_call_count ON api_call_statistics (call_count);`);
       console.log('✅ Database table verified/created');
 
       app.listen(PORT, '0.0.0.0', () => {

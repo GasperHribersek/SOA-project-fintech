@@ -1,0 +1,26 @@
+# Render Blueprint za statistično storitev (naloga 5 — cloud deploy)
+# Deploy: https://dashboard.render.com → New → Blueprint → izberi ta repo.
+# Ustvari brezplačno PostgreSQL bazo IN web storitev iz Dockerfile-a.
+
+databases:
+  - name: statistics-db
+    plan: free
+    databaseName: statistics_db
+    user: stats_user
+
+services:
+  - type: web
+    name: statistics-service
+    runtime: docker
+    rootDir: statistics-service
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # Render samodejno vbrizga PORT — storitev posluša na process.env.PORT
+      - key: DATABASE_URL
+        fromDatabase:
+          name: statistics-db
+          property: connectionString
+      - key: PGSSL
+        value: require

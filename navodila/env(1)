@@ -1,0 +1,19 @@
+# Server Configuration
+PORT=3002
+NODE_ENV=development
+
+# Database Configuration (for Node.js service)
+DB_HOST=user-db
+DB_PORT=3306
+DB_USER=user_user
+DB_PASSWORD=user_password
+DB_NAME=user_db
+
+# Database Configuration (for Docker MySQL)
+USER_MYSQL_ROOT_PASSWORD=rootpassword
+USER_DB_NAME=user_db
+USER_DB_USER=user_user
+USER_DB_PASSWORD=user_password
+
+# Inter-service Communication
+AUTH_SERVICE_URL=http://auth-service:3001

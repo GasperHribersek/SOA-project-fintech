@@ -181,6 +181,74 @@ http://localhost:3002/api/users/{userId}
 
 http://localhost:3002/api/users/{userId}/settings
 
+# TRANSACTIONS SERVICE (port 3003)
+
+JWT zaščitena storitev za upravljanje transakcij uporabnika. Ob ustvarjeni transakciji
+oddaljeno pokliče **budget-service** (`/budgets/update-spend`) in posodobi porabo
+(medstoritvena komunikacija). Loge pošilja v RabbitMQ s correlation ID, klice javlja
+statistics-service.
+
+Swagger: http://localhost:3003/api-docs
+
+## GET ALL TRANSACTIONS [GET]
+http://localhost:3003/transactions
+
+## GET TRANSACTION BY ID [GET]
+http://localhost:3003/transactions/{id}
+
+## CREATE TRANSACTION [POST]
+http://localhost:3003/transactions
+{ "amount": 0, "category": "", "note": "" }
+
+## BULK IMPORT [POST]
+http://localhost:3003/transactions/import
+{ "transactions": [ { "amount": 0, "category": "", "note": "" } ] }
+
+## UPDATE TRANSACTION [PUT]
+http://localhost:3003/transactions/{id}
+
+## UPDATE CATEGORY [PUT]
+http://localhost:3003/transactions/{id}/category
+
+## DELETE TRANSACTION [DELETE]
+http://localhost:3003/transactions/{id}
+
+## DELETE ALL USER TRANSACTIONS [DELETE]
+http://localhost:3003/transactions/user/me
+
+# BUDGET SERVICE (port 3004)
+
+JWT zaščitena storitev za upravljanje proračunov uporabnika. Loge pošilja v RabbitMQ
+s correlation ID, klice javlja statistics-service.
+
+Swagger: http://localhost:3004/api-docs
+
+## GET ALL BUDGETS [GET]
+http://localhost:3004/budgets
+
+## GET BUDGET BY ID [GET]
+http://localhost:3004/budgets/{id}
+
+## CREATE BUDGET [POST]
+http://localhost:3004/budgets
+{ "limitAmount": 0 }
+
+## UPDATE SPEND [POST]
+http://localhost:3004/budgets/update-spend
+{ "amount": 0 }
+
+## UPDATE BUDGET [PUT]
+http://localhost:3004/budgets/{id}
+
+## UPDATE LIMIT [PUT]
+http://localhost:3004/budgets/{id}/limit
+
+## DELETE BUDGET [DELETE]
+http://localhost:3004/budgets/{id}
+
+## DELETE ALL USER BUDGETS [DELETE]
+http://localhost:3004/budgets/user/me
+
 # ANALYTICS SERVICE (port 5001)
 
 See Swagger documentation at: http://localhost:5001/api-docs

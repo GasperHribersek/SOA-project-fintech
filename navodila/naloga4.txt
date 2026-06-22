@@ -1,0 +1,35 @@
+ 
+
+Pri tej nalogi boste vaše mikrostoritve dopolnili tako, da bodo ustrezno uporabljale vzorec Messaging.
+
+Za zagotovitev upravljanja s sporočilnimi vrstami bomo uporabili posrednika imenovanega RabbitMQ.
+
+Nameščen RabbitMQ vam bo služil, kot repozitorij za vašo beleženje (angl. Logging) logov. 
+
+Uporabljajte lastno instanco Rabbit MQ, ki si jo vzpostavite v sklopu vašega skupnega Docker Compose.
+
+Ustvarite si svoj Exchange in svoj logging queue.
+
+
+Vaše mikrostoritve dopolnite z vpeljavo beleženja (angl. Logging). Vsaka mikrostoritev naj ima svoj sistem beleženja pri čemer poskrbite za prenašanje corellation ID-ja, kadar gre za klice, ki se izvedejo preko večih mikrostoritev (s tem se omogoči sledljivost posameznim dogodkom). Upoštevajte še ostale dobre prakse:
+
+1. Uporaba correlation ID
+
+2. Ustrezna struktura logov
+
+3. Zapisovanje ustreznih podatkov
+
+Primer ustreznega loga: 
+
+<timestamp> <LogType> (Info/Error/Warn) <URL> <CorrelationId> <imeAplikacije> - <Sporočilo>
+
+2020-12-15 16:26:04,797 INFO http//:localhost:8080/users Correlation: 123 [com.example.demo.DemoUsers] - <* Klic storitve GET uporabniki *>
+
+
+Loge iz posamezne mikrostoritve pošljite svojemu sporočilnemu posredniku (RabbitMQ).
+
+⚠️Ustvarite storitev, ki bo ob klicu prenesla vse loge iz sporočilne vrste. Storitev naj omogoča sledeče 3 klice.
+
+    POST http://<naslov>:<port>/logs-> se poveže na sporočilni posrednik in iz njega prenese vse klice ter jih shrani v bazo storitve
+    GET http://<naslov>:<port>/logs/{datumOd}/{datumDo} -> izpiše vse loge, ki so bili preneseni v bazo med dvema datuma
+    DELETE http://<naslov>:<port>/logs -> izbriše vse hranjene loge iz baze

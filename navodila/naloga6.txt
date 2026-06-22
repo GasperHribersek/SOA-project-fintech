@@ -1,0 +1,7 @@
+Vsak član skupine naj pripravi vsaj 2 scenarija na storitev oz. frontend, ki jih boste demonstrirali na predstavitvah projektov.
+
+Scenarije zapišite v zato pripravljene predloge. Scenariji lahko vsebujejo vejitve (npr. začetek scenarija lahko sproži druga storitev ali odjemalec sam), pri čemer poskrbite, da boste lahko dostopali do zunanje storitve.
+
+Vsaj 2 od zastavljenih scenarijev naj vključujeta tudi uporabo storitev vaših sošolcev.
+
+Scenariji bodo služili kot podpora za predstavitev vašega dela na projektih.

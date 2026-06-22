@@ -1,0 +1,25 @@
+# Server Configuration
+PORT=3001
+NODE_ENV=development
+
+# Database Configuration (for Node.js service)
+DB_HOST=auth-db
+DB_PORT=3306
+DB_USER=auth_user
+DB_PASSWORD=auth_password
+DB_NAME=auth_db
+
+# Database Configuration (for Docker MySQL)
+AUTH_MYSQL_ROOT_PASSWORD=rootpassword
+AUTH_DB_NAME=auth_db
+AUTH_DB_USER=auth_user
+AUTH_DB_PASSWORD=auth_password
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+
+# JWT Expiration (in hours)
+JWT_EXPIRES_IN=24h
+
+# Inter-service Communication
+USER_SERVICE_URL=http://user-service:3002

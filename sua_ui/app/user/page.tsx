@@ -24,6 +24,9 @@ import {
     PiggyBank,
     LogOut,
     User,
+    AlertTriangle,
+    Plus,
+    Trash2,
 } from "lucide-react";
 import {
     trackPageView,
@@ -33,7 +36,14 @@ import {
     trackChartInteraction,
     trackEvent,
 } from "@/lib/analytics";
-import { authApi, userApi } from "@/lib/api";
+import {
+    authApi,
+    userApi,
+    transactionsApi,
+    budgetApi,
+    type Transaction,
+    type Budget,
+} from "@/lib/api";
 import { removeToken, getUser, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/error-handler";
 import { toast } from "sonner";
@@ -58,6 +68,11 @@ export default function UserPage() {
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [userBalance, setUserBalance] = useState<number>(0);
     const [loadingBalance, setLoadingBalance] = useState(false);
+    // Transactions + Budget (moji storitvi)
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [budgets, setBudgets] = useState<Budget[]>([]);
+    const [paymentCategory, setPaymentCategory] = useState("Trgovine");
+    const [newBudgetLimit, setNewBudgetLimit] = useState("");
     const [editFormData, setEditFormData] = useState({
         firstName: "",
         lastName: "",
@@ -101,7 +116,7 @@ export default function UserPage() {
     const stats = [
         { label: "Skupno stanje", value: userBalance.toLocaleString('sl-SI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), suffix: "€", icon: Wallet, color: "text-primary" },
         { label: "Mesečni prihodki", value: "3.200,00", suffix: "€", icon: ArrowDownCircle, color: "text-emerald-500" },
-        { label: "Mesečni stroški", value: "1.470,00", suffix: "€", icon: ArrowUpCircle, color: "text-rose-500" },
+        { label: "Stroški (transakcije)", value: transactions.reduce((s, t) => s + parseFloat(t.amount), 0).toLocaleString('sl-SI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), suffix: "€", icon: ArrowUpCircle, color: "text-rose-500" },
         { label: "Prihranki", value: "8.750,00", suffix: "€", icon: PiggyBank, color: "text-sky-500" },
     ];
 
@@ -122,15 +137,37 @@ export default function UserPage() {
         { name: "Jun", value: 25 },
     ];
 
-    // Podatki za graf stroškov
-    const expenseDistribution = [
-        { name: "Trgovine", value: 450, color: "oklch(0.646 0.222 41.116)", icon: ShoppingBag },
-        { name: "Prehrana", value: 320, color: "oklch(0.6 0.118 184.704)", icon: UtensilsCrossed },
-        { name: "Oblačila", value: 180, color: "oklch(0.398 0.07 227.392)", icon: Shirt },
-        { name: "Dom", value: 250, color: "oklch(0.828 0.189 84.429)", icon: Home },
-        { name: "Transport", value: 150, color: "oklch(0.769 0.188 70.08)", icon: Car },
-        { name: "Zdravje", value: 120, color: "oklch(0.577 0.245 27.325)", icon: Heart },
-    ];
+    // Preslikava kategorija -> ikona + barva (za realne transakcije)
+    const categoryStyles: Record<string, { color: string; icon: typeof ShoppingBag }> = {
+        Trgovine: { color: "oklch(0.646 0.222 41.116)", icon: ShoppingBag },
+        Prehrana: { color: "oklch(0.6 0.118 184.704)", icon: UtensilsCrossed },
+        Hrana: { color: "oklch(0.6 0.118 184.704)", icon: UtensilsCrossed },
+        Oblačila: { color: "oklch(0.398 0.07 227.392)", icon: Shirt },
+        Dom: { color: "oklch(0.828 0.189 84.429)", icon: Home },
+        Najem: { color: "oklch(0.828 0.189 84.429)", icon: Home },
+        Transport: { color: "oklch(0.769 0.188 70.08)", icon: Car },
+        Prevoz: { color: "oklch(0.769 0.188 70.08)", icon: Car },
+        Zdravje: { color: "oklch(0.577 0.245 27.325)", icon: Heart },
+    };
+    const defaultCategoryStyle = { color: "oklch(0.646 0.222 41.116)", icon: Wallet };
+
+    // Realna razdelitev stroškov iz transakcij (vsota po kategoriji)
+    const expenseDistribution = (() => {
+        const byCategory = new Map<string, number>();
+        for (const t of transactions) {
+            const cat = t.category || "Ostalo";
+            byCategory.set(cat, (byCategory.get(cat) || 0) + parseFloat(t.amount));
+        }
+        return Array.from(byCategory.entries())
+            .map(([name, value]) => {
+                const style = categoryStyles[name] || defaultCategoryStyle;
+                return { name, value, color: style.color, icon: style.icon };
+            })
+            .sort((a, b) => b.value - a.value);
+    })();
+
+    // Skupna poraba (vsota vseh transakcij) za statistiko
+    const totalSpent = transactions.reduce((s, t) => s + parseFloat(t.amount), 0);
 
     type PaymentMode = "pay" | "request" | "invest";
 
@@ -165,6 +202,8 @@ export default function UserPage() {
                     // Load user profile from user-service
                     await loadUserProfile(storedUser.id);
                     await loadUserBalance(storedUser.id);
+                    // Naloži transakcije in proračune (moji storitvi)
+                    await loadFinanceData();
                 } else {
                     trackPageView('/user', demoUser.id);
                 }
@@ -212,6 +251,57 @@ export default function UserPage() {
             setUserBalance(0);
         } finally {
             setLoadingBalance(false);
+        }
+    };
+
+    // Naloži transakcije in proračune (moji storitvi). warnOnOverflow -> toast ob prekoračitvi
+    const loadFinanceData = async (warnOnOverflow = false) => {
+        try {
+            const [t, b] = await Promise.all([
+                transactionsApi.list(),
+                budgetApi.list(),
+            ]);
+            setTransactions(t);
+            setBudgets(b);
+            if (warnOnOverflow) {
+                const over = b.filter(
+                    (x) => parseFloat(x.spent) > parseFloat(x.limitamount)
+                );
+                if (over.length > 0) {
+                    toast.warning("Proračun presežen!", {
+                        description: `Poraba presega limit pri ${over.length} proračunu(ih).`,
+                        duration: 6000,
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load finance data:", error);
+        }
+    };
+
+    const createBudgetFromDashboard = async () => {
+        const limitAmount = parseFloat(newBudgetLimit);
+        if (isNaN(limitAmount) || limitAmount <= 0) {
+            toast.error("Vnesite veljaven limit (> 0)");
+            return;
+        }
+        try {
+            await budgetApi.create({ limitAmount });
+            toast.success("Proračun ustvarjen");
+            setNewBudgetLimit("");
+            await loadFinanceData();
+        } catch (error) {
+            handleApiError(error);
+        }
+    };
+
+    const deleteBudgetFromDashboard = async (id: number) => {
+        try {
+            await budgetApi.remove(id);
+            toast.success("Proračun izbrisan");
+            await loadFinanceData();
+        } catch (error) {
+            handleApiError(error);
         }
     };
 
@@ -312,6 +402,14 @@ export default function UserPage() {
                 } catch (error) {
                     console.error('Failed to update balance:', error);
                 }
+            }
+
+            // Ustvari pravo transakcijo -> transactions-service sam posodobi proračun
+            try {
+                await transactionsApi.create({ amount, category: paymentCategory });
+                await loadFinanceData(true); // osveži + opozori ob prekoračitvi proračuna
+            } catch (error) {
+                console.error('Failed to create transaction:', error);
             }
 
             setTimeout(() => {
@@ -457,6 +555,20 @@ export default function UserPage() {
                                 <BarChart3 className="h-4 w-4" />
                                 Moji dogodki
                             </Link>
+                            <Link
+                                href="/finance"
+                                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                            >
+                                <Wallet className="h-4 w-4" />
+                                Transakcije in proračun
+                            </Link>
+                            <Link
+                                href="/statistics"
+                                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                            >
+                                <BarChart3 className="h-4 w-4" />
+                                Statistika
+                            </Link>
 
                             {isAuthenticated() && (
                                 <button
@@ -593,53 +705,75 @@ export default function UserPage() {
                             })}
                         </div>
 
-                        {/* Fintech extra: goals summary */}
+                        {/* Proračun (budget-service) — realni podatki */}
                         <div className="rounded-2xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur">
                             <div className="mb-3 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <PiggyBank className="h-5 w-5 text-primary" />
                                     <h2 className="text-sm font-semibold text-card-foreground">
-                                        Cilji varčevanja
+                                        Proračun
                                     </h2>
                                 </div>
                                 <span className="text-xs text-muted-foreground">
-                                    3 aktivni cilji
+                                    {budgets.length} {budgets.length === 1 ? "proračun" : "proračunov"}
                                 </span>
                             </div>
+
+                            {/* Forma za nov proračun */}
+                            <div className="mb-3 flex gap-2">
+                                <input
+                                    type="number"
+                                    value={newBudgetLimit}
+                                    onChange={(e) => setNewBudgetLimit(e.target.value)}
+                                    placeholder="Limit (€)"
+                                    className="flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                />
+                                <button
+                                    onClick={createBudgetFromDashboard}
+                                    className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Dodaj
+                                </button>
+                            </div>
+
                             <div className="space-y-3 text-xs">
-                                <div>
-                                    <div className="mb-1 flex items-center justify-between">
-                                        <span className="font-medium text-card-foreground">
-                                            Rezervni sklad
-                                        </span>
-                                        <span className="text-muted-foreground">3.500 € / 5.000 €</span>
-                                    </div>
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                                        <div className="h-full w-[70%] rounded-full bg-emerald-500" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="mb-1 flex items-center justify-between">
-                                        <span className="font-medium text-card-foreground">
-                                            Potovanje
-                                        </span>
-                                        <span className="text-muted-foreground">1.200 € / 2.000 €</span>
-                                    </div>
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                                        <div className="h-full w-[60%] rounded-full bg-sky-500" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="mb-1 flex items-center justify-between">
-                                        <span className="font-medium text-card-foreground">
-                                            Avto
-                                        </span>
-                                        <span className="text-muted-foreground">4.000 € / 10.000 €</span>
-                                    </div>
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                                        <div className="h-full w-[40%] rounded-full bg-violet-500" />
-                                    </div>
-                                </div>
+                                {budgets.length === 0 && (
+                                    <p className="text-muted-foreground">Ni proračunov. Ustvarite enega zgoraj.</p>
+                                )}
+                                {budgets.map((b) => {
+                                    const limit = parseFloat(b.limitamount);
+                                    const spent = parseFloat(b.spent);
+                                    const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+                                    const over = spent > limit;
+                                    return (
+                                        <div key={b.id}>
+                                            <div className="mb-1 flex items-center justify-between">
+                                                <span className="flex items-center gap-1 font-medium text-card-foreground">
+                                                    Proračun #{b.id}
+                                                    {over && <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />}
+                                                </span>
+                                                <span className="flex items-center gap-2">
+                                                    <span className={over ? "text-rose-500 font-semibold" : "text-muted-foreground"}>
+                                                        {spent.toFixed(2)} € / {limit.toFixed(2)} €
+                                                    </span>
+                                                    <button
+                                                        onClick={() => deleteBudgetFromDashboard(b.id)}
+                                                        className="text-muted-foreground hover:text-rose-500"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </span>
+                                            </div>
+                                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                                <div
+                                                    className={`h-full rounded-full ${over ? "bg-rose-500" : "bg-emerald-500"}`}
+                                                    style={{ width: `${pct}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
@@ -673,7 +807,12 @@ export default function UserPage() {
                                     Razdelitev stroškov
                                 </h2>
                             </div>
-                            <div className="space-y-4">
+            <div className="space-y-4">
+                                {expenseDistribution.length === 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Ni transakcij. Uporabite &quot;Plačaj&quot; za dodajanje stroška.
+                                    </p>
+                                )}
                                 {expenseDistribution.map((expense, index) => {
                                     const total = expenseDistribution.reduce((sum, e) => sum + e.value, 0);
                                     const percentage = (expense.value / total) * 100;
@@ -998,6 +1137,31 @@ export default function UserPage() {
                                                             className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                                             required
                                                         />
+                                                    </div>
+
+                                                    <div>
+                                                        <label
+                                                            htmlFor="paymentCategory"
+                                                            className="mb-2 block text-sm font-medium text-card-foreground"
+                                                        >
+                                                            Kategorija
+                                                        </label>
+                                                        <select
+                                                            id="paymentCategory"
+                                                            value={paymentCategory}
+                                                            onChange={(e) => setPaymentCategory(e.target.value)}
+                                                            className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                        >
+                                                            <option>Trgovine</option>
+                                                            <option>Prehrana</option>
+                                                            <option>Oblačila</option>
+                                                            <option>Dom</option>
+                                                            <option>Transport</option>
+                                                            <option>Zdravje</option>
+                                                        </select>
+                                                        <p className="mt-1 text-xs text-muted-foreground">
+                                                            Plačilo ustvari transakcijo in posodobi proračun.
+                                                        </p>
                                                     </div>
 
                                                     <div>

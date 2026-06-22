@@ -12,7 +12,7 @@ services:
       MYSQL_USER: ${AUTH_DB_USER}
       MYSQL_PASSWORD: ${AUTH_DB_PASSWORD}
     ports:
-      - "3306:3306"
+      - "3308:3306"
     volumes:
       - auth-db-data:/var/lib/mysql
     networks:
@@ -66,6 +66,92 @@ services:
       timeout: 5s
       retries: 5
 
+  # Statistics Service Database (PostgreSQL — ujema se s cloud deployem na Render)
+  # Lokalna instanca služi razvoju; uradni deliverable naloge 5 je deploy v oblak.
+  statistics-db:
+    image: postgres:15-alpine
+    container_name: statistics-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stats_user
+      POSTGRES_PASSWORD: stats_pass
+      POSTGRES_DB: statistics_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - statistics-db-data:/var/lib/postgresql/data
+    networks:
+      - fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stats_user -d statistics_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Statistics Service (lokalna instanca — za razvoj/test)
+  statistics-service:
+    build:
+      context: ./statistics-service
+      dockerfile: Dockerfile
+    container_name: statistics-service
+    restart: unless-stopped
+    environment:
+      PORT: 5002
+      DB_HOST: statistics-db
+      DB_PORT: 5432
+      DB_USER: stats_user
+      DB_PASSWORD: stats_pass
+      DB_NAME: statistics_db
+    ports:
+      - "5005:5002"
+    depends_on:
+      statistics-db:
+        condition: service_healthy
+    networks:
+      - fintech-network
+
+  # Transactions Service Database
+  transactions-db:
+    image: postgres:15-alpine
+    container_name: transactions-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: transactionsdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - transactions-db-data:/var/lib/postgresql/data
+    networks:
+      - fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d transactionsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Budget Service Database
+  budget-db:
+    image: postgres:15-alpine
+    container_name: budget-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: budgetdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - budget-db-data:/var/lib/postgresql/data
+    networks:
+      - fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d budgetdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # RabbitMQ Message Broker
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -100,6 +186,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
       USER_SERVICE_URL: http://user-service:3002
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      STATISTICS_SERVICE_URL: ${STATISTICS_SERVICE_URL:-http://statistics-service:5002}
     ports:
       - "3001:3001"
     depends_on:
@@ -125,6 +212,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
       AUTH_SERVICE_URL: http://auth-service:3001
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      STATISTICS_SERVICE_URL: ${STATISTICS_SERVICE_URL:-http://statistics-service:5002}
     ports:
       - "3002:3002"
     depends_on:
@@ -179,6 +267,59 @@ services:
     networks:
       - fintech-network
 
+  # Transactions Service
+  transactions-service:
+    build:
+      context: ./transactions-service
+      dockerfile: Dockerfile
+    container_name: transactions-service
+    restart: unless-stopped
+    environment:
+      PORT: 3003
+      PGHOST: transactions-db
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: transactionsdb
+      JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      BUDGET_SERVICE_URL: http://budget-service:3004
+      STATISTICS_SERVICE_URL: ${STATISTICS_SERVICE_URL:-http://statistics-service:5002}
+    ports:
+      - "3003:3003"
+    depends_on:
+      transactions-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fintech-network
+
+  # Budget Service
+  budget-service:
+    build:
+      context: ./budget-service
+      dockerfile: Dockerfile
+    container_name: budget-service
+    restart: unless-stopped
+    environment:
+      PORT: 3004
+      PGHOST: budget-db
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: budgetdb
+      JWT_SECRET: ${JWT_SECRET:-soa-je-kul}
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      STATISTICS_SERVICE_URL: ${STATISTICS_SERVICE_URL:-http://statistics-service:5002}
+    ports:
+      - "3004:3004"
+    depends_on:
+      budget-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fintech-network
+
   # UI Service
   sua_ui:
     build:
@@ -190,6 +331,9 @@ services:
       NEXT_PUBLIC_ANALYTICS_URL: http://localhost:5001
       NEXT_PUBLIC_AUTH_SERVICE_URL: http://localhost:3001
       NEXT_PUBLIC_USER_SERVICE_URL: http://localhost:3002
+      NEXT_PUBLIC_TRANSACTIONS_URL: http://localhost:3003
+      NEXT_PUBLIC_BUDGET_URL: http://localhost:3004
+      NEXT_PUBLIC_STATS_SERVICE_URL: ${NEXT_PUBLIC_STATS_SERVICE_URL:-http://localhost:5005}
     ports:
       - "3000:3000"
     volumes:
@@ -211,4 +355,7 @@ volumes:
   auth-db-data:
   user-db-data:
   analytics-db-data:
+  statistics-db-data:
+  transactions-db-data:
+  budget-db-data:
   rabbitmq-data:

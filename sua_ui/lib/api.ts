@@ -11,6 +11,10 @@ const USER_SERVICE_URL =
   process.env.NEXT_PUBLIC_USER_SERVICE_URL || "http://localhost:3002";
 const ANALYTICS_SERVICE_URL =
   process.env.NEXT_PUBLIC_ANALYTICS_URL || "http://localhost:5001";
+const TRANSACTIONS_SERVICE_URL =
+  process.env.NEXT_PUBLIC_TRANSACTIONS_URL || "http://localhost:3003";
+const BUDGET_SERVICE_URL =
+  process.env.NEXT_PUBLIC_BUDGET_URL || "http://localhost:3004";
 
 export interface ApiError {
   error: string;
@@ -305,6 +309,99 @@ export const analyticsApi = {
     }`;
     return apiRequest(url, {
       method: "GET",
+    });
+  },
+};
+
+/**
+ * Transactions Service API (port 3003)
+ * Vrednosti amount/limitamount/spent prihajajo iz PostgreSQL kot nizi.
+ */
+export interface Transaction {
+  id: number;
+  userid: string;
+  amount: string;
+  category: string;
+  note: string | null;
+  createdat: string;
+}
+
+export const transactionsApi = {
+  /** Pridobi vse transakcije prijavljenega uporabnika */
+  async list() {
+    return apiRequest<Transaction[]>(`${TRANSACTIONS_SERVICE_URL}/transactions`, {
+      method: "GET",
+    });
+  },
+
+  /** Ustvari transakcijo (transactions-service nato sam posodobi proračun) */
+  async create(data: { amount: number; category: string; note?: string }) {
+    return apiRequest<Transaction>(`${TRANSACTIONS_SERVICE_URL}/transactions`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /** Izbriši eno transakcijo */
+  async remove(id: number) {
+    return apiRequest(`${TRANSACTIONS_SERVICE_URL}/transactions/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  /** Izbriši vse transakcije uporabnika */
+  async clearAll() {
+    return apiRequest(`${TRANSACTIONS_SERVICE_URL}/transactions/user/me`, {
+      method: "DELETE",
+    });
+  },
+};
+
+/**
+ * Budget Service API (port 3004)
+ */
+export interface Budget {
+  id: number;
+  userid: string;
+  limitamount: string;
+  spent: string;
+}
+
+export const budgetApi = {
+  /** Pridobi vse proračune prijavljenega uporabnika */
+  async list() {
+    return apiRequest<Budget[]>(`${BUDGET_SERVICE_URL}/budgets`, {
+      method: "GET",
+    });
+  },
+
+  /** Ustvari nov proračun z limitom */
+  async create(data: { limitAmount: number }) {
+    return apiRequest<Budget>(`${BUDGET_SERVICE_URL}/budgets`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /** Posodobi samo limit proračuna */
+  async updateLimit(id: number, limitAmount: number) {
+    return apiRequest<Budget>(`${BUDGET_SERVICE_URL}/budgets/${id}/limit`, {
+      method: "PUT",
+      body: JSON.stringify({ limitAmount }),
+    });
+  },
+
+  /** Izbriši en proračun */
+  async remove(id: number) {
+    return apiRequest(`${BUDGET_SERVICE_URL}/budgets/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  /** Izbriši vse proračune uporabnika */
+  async clearAll() {
+    return apiRequest(`${BUDGET_SERVICE_URL}/budgets/user/me`, {
+      method: "DELETE",
     });
   },
 };

@@ -1,0 +1,1 @@
+Jaz mam transalcije in proracun

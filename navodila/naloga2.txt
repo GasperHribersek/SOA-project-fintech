@@ -1,0 +1,67 @@
+Navodilo
+
+V tej nalogi boste razvili mikrostoritve, ki so v skladu z načrtom iz prejšnjih podpoglavij. Vsaka storitev naj implementira vnaprej določene operacije in uporablja lastno podatkovno bazo, ki jo lahko ustvarite z uporabo Dockerja ali pa izberete oblačno (cloud) zbirko podatkov (na primer MongoDB Atlas ali podobne rešitve). Vse mikrostoritve morajo biti zasnovane tako, da bodo omogočale enostavno pakiranje in zagon z Dockerjem ter se bodo povezovale z eno drugo storitvijo, ki jo bo implementiral drug član skupine.
+Zahteve
+
+    Pripravite načrt za mikrostoritve, ki bo upošteval specifikacije iz prejšnjih podpoglavij.
+    Implementirajte vsaj dve GET, dve POST, dve PUT in dve DELETE operaciji v vsaki storitvi.
+    Vsaka mikrostoritev mora uporabljati lastno podatkovno bazo:
+        Dovoljeni načini za implementacijo podatkovne baze:
+            Z Dockerjem (na primer z uporabo MySQL, PostgreSQL ali MongoDB)
+            S cloud zbirko podatkov, kot je MongoDB Atlas, ali druga podobna rešitev
+    Pripravite vse storitve za pakiranje in zagon na Dockerju. Ustvarite Dockerfile za vsako storitev.
+    Pri implementaciji upoštevajte dobre prakse programiranja in optimizacijo uporabe sredstev:
+        Uporabite čim manj sistemskih virov (npr. obvladujte povezave z bazo podatkov, optimizirajte poizvedbe, uporabljajte ustrezne HTTP metode)
+        Zmanjšajte velikost slik z Dockerjem z izbiro osnovnih slik (npr. alpine verzije slik) in odstranitvijo nepotrebnih paketov
+    Vsaka storitev se mora povezovati z eno drugo storitvijo v sistemu:
+        Znotraj skupine določite, katere storitve bodo komunicirale med seboj, in omogočite ustrezne povezave za prenos podatkov ali klicanje funkcij drugih storitev.
+    Znotraj skupine morate uporabiti vsaj 3 različna ogrodja ("frameworke").
+
+Po končani implementaciji preizkusite delovanje vaših storitev z lokalnim zagonom na Dockerju in preverite, ali vse povezave med storitvami delujejo pravilno.
+Dodatni viri
+
+    Microservices (opens in a new tab)
+
+Podrobnosti
+Mikrostoritve
+
+Mikrostoritve so programske komponente, ki so zasnovane za izvajanje ene same funkcionalnosti. Vsaka storitev je neodvisna in komunicira z drugimi storitvami preko omrežja. Mikrostoritve so lahko napisane v različnih programskih jezikih in uporabljajo različne tehnologije za shranjevanje podatkov. Vsaka storitev je po navadi zgrajena kot ločena aplikacija, ki se lahko izvaja na različnih strežnikih ali v oblaku.
+
+Storitve so po navadi organizirane okoli poslovnih funkcij in so lahko razdeljene na več manjših storitev, ki opravljajo posamezne naloge.
+
+Mikrostoritve
+
+Zraven takšne organizacije poznamo še več vzorcev arhitekture mikrostoritev, kot so:
+
+    organiziranost in razvoj glede na domeno (Domain-Driven Design - DDD)
+    organiziranost in razvoj glede na skupine uporabnikov (User Personas)
+
+Primerjava med mikrostoritvami in monolitnimi arhitekturami
+Vidik 	Mikrostoritveno orientirane arhitekture 	Monolitna arhitektura
+Slog arhitekture 	Razdeljena na majhne, neodvisne storitve. 	Enotna, tesno sklopljena koda.
+Struktura razvojne ekipe 	Majhne, medfunkcijske ekipe za vsako mikrostoritev. 	Večja, centralizirana razvojna ekipa.
+Skalabilnost 	Neodvisno skaliranje posameznih storitev. 	Skaliranje vključuje podvajanje celotne aplikacije.
+Nameščanje 	Neodvisno nameščanje storitev. 	Celotna aplikacija se namesti kot ena enota.
+Izraba virov 	Učinkovita uporaba virov, saj se storitve lahko skalirajo neodvisno. 	Viri so dodeljeni glede na potrebe celotne aplikacije.
+Hitrost razvoja 	Hitrejši razvoj in cikli nameščanja. 	Počasnejši razvoj in nameščanje zaradi velikosti projekta.
+Prilagodljivost 	Lažje uvajanje novih tehnologij za specifične storitve. 	Omejena prilagodljivost zaradi skupne osnove.
+Vzdrževanje 	Lažje vzdrževanje manjših, osredotočenih malih enot. 	Vzdrževanje je lahko zapleteno za velike projekte.
+Prednosti in slabosti
+
+Prednosti mikrostoritev:
+
+    Skalabilnost: Omogočajo skaliranje samo potrebnih delov sistema.
+    Neodvisni razvoj in razmestitev: Vsako storitev se razvija, testira in uvede neodvisno.
+    Fleksibilnost tehnologij: Razvijalci lahko za vsako storitev izberejo najprimernejša orodja in jezike.
+    Večja odpornost: Napaka ene storitve običajno ne vpliva na delovanje celotnega sistema.
+    Hitra prilagoditev: Omogočajo hitro prilagajanje spremembam.
+
+(možne) Slabosti mikrostoritev:
+
+    Kompleksnost orkestracije: Upravljanje številnih storitev zahteva napredna orodja
+    Komunikacijske takasnitve: Omrežna komunikacija med storitvami lahko povzroči zakasnitve in napake.
+    Težja diagnostika: Napake so razpršene, kar otežuje odkrivanje in zahteva centralizirano spremljanje.
+    Transakcijska skladnost: Zagotavljanje skladnosti podatkov med storitvami je zapleteno.
+    Večje vzdrževanje: Več storitev pomeni večjo potrebo po vzdrževanju in usklajevanju.
+    Visoki stroški: Ločena infrastruktura za vsako storitev lahko prinese večje stroške.
+    Zahtevna varnost: Upravljanje varnostnih protokolov med storitvami je bolj zapleteno.

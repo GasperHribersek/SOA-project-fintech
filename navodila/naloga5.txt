@@ -1,0 +1,24 @@
+Storitve razvite v obliki zabojniških slik so enostavno prenosljive in namestljive na strežnike. Včasih si želimo delegirati vzdrževanje infrastrukture na zunanjega izvajalca, želimo pa le razviti in namestiti storitve. V ta namen lahko uporabimo PaaS (Platform as a Service) ponudnike.
+Navodila:
+
+    Ustvarite (v kolikor si še niste) si GitHub Student Developer pack račun (https://education.github.com/pack) ali račun pri poljubnem ponudniku cloud storitev
+        *Za uporabo je ponekod potrebno predložiti dokazilo o statusu študenta
+
+    V poljubnem cloud okolju si vzpostavite poljubno podatkovno bazo
+    V poljubnem ogrodju razvijte storitev ki bo prikazovala statistiko za enega izmed vaših APIjev, naj bo povezana s podatkovno bazo in vsebuje naj vsaj:
+        Swagger in 4 klice, ki bodo vrnili sledeče podatke:
+            GET (zadnje klican endpoint)
+            GET (najpogosteje klican endpoint)
+            GET (število posameznih klicev glede na posamezen endpoint)
+            POST (posodobi podatke) - ta klic bo oddaljeno klicala storitev, ki bo s pomočjo zahtevka javila katera storitev je bila klicana.
+                Primer telesa (body) post zahtevka: 
+                { 
+                   klicanaStoritev: /registrirajUporabnika
+                }
+    Na enega izmed cloud ponudnikov, ki so v okviru programa GitHub Student Developer pack brezplačne namestite storitev (na voljo Microsoft Azure, DigitalOcean, Heroku)
+    Študenti, ki razvijajo Frontend naj na Frontend dodajo podstran, ki omogoča prikaz podatkov (GET (število posameznih klicev glede na posamezen endpoint)) - za vse člane skupine 
+
+Alternativne opcije (ki so preverjene, da pri uporabi niso zahtevale kreditne kartice):
+
+    Render (tukaj boste lahko deployali Docker sliko)
+    Vercel (tukaj bo potrebno razviti 4 serverless funkcije za REST klice)
